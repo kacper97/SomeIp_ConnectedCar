@@ -54,6 +54,10 @@ variables
   DWORD gMc;                // global method call handle
   DWORD gMcGetter;          // getter method call
   DWORD gMcSetter;          // setter method call
+  
+  DWORD resetFaultCode;
+  DWORD resetFaultCodeGetter;
+  DWORD resetFaultCodeSetter;
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
@@ -107,9 +111,15 @@ On start
   gMc = SomeIpCreateMethodCall(csi,7,"OnMethodResponse");
   CheckForSomeIpError();
   
+  resetFaultCode = SomeIpCreateMethodCall(csi,39,"OnMethodResponse");
+  CheckForSomeIpError();
+  
   //Works also without any Fibex/ARXML but only with SomeIpSetData and not SomeIpSetValueDWord (online help)
   
   SomeIpSetData(gMc,elCount(payload),payload);
+  CheckForSomeIpError();
+  
+  SomeIpSetData(resetFaultCode,elCount(payload),payload);
   CheckForSomeIpError();
   
   // Subscribe to two Eventgroups #1 for the event, and #2 for the field notification
@@ -133,6 +143,12 @@ On start
   CheckForSomeIpError();
   
   gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
+  CheckForSomeIpError();
+  
+  resetFaultCodeGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
+  CheckForSomeIpError();
+  
+  resetFaultCodeSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
   CheckForSomeIpError();
   
   // Enable multicast sending of events when 2 or more subscribers.
@@ -412,3 +428,35 @@ void CheckForSomeIpError()
   } 
   
 }
+
+
+/**********************************************************************
+*
+* Event handler for the pressureUnits field Set Button.
+* The value to be set is got from the panel via the DASH::Units variable.
+* Triggers a call of the field's Setter method to the server.
+*
+*********************************************************************/
+
+
+on sysvar DASH::SetFaultCode
+{
+  byte dataBuffer[1];
+  
+  dataBuffer[0] = @DASH::SetFaultCode;
+  
+  if (@this == 1)     // prevent double-triggering with panel button controls
+  {
+    
+      // set value of field content 
+      SomeIpSetData(resetFaultCodeSetter,1,dataBuffer);
+      CheckForSomeIpError();
+
+      // call setter method
+      SomeIpCallMethod(resetFaultCodeSetter);
+      CheckForSomeIpError();
+  }
+}
+
+
+

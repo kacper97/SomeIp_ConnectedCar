@@ -9,6 +9,10 @@ variables
   DWORD gMc;                // global method call handle
   DWORD gMcGetter;          // getter method call
   DWORD gMcSetter;          // setter method call
+  
+  DWORD resetFaultCode;
+  DWORD resetFaultCodeGetter;
+  DWORD resetFaultCodeSetter;
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
@@ -51,31 +55,21 @@ On start
   csi = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
   CheckForSomeIpError();
 
-   // create Service Instance
-  csi2 = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
-  CheckForSomeIpError();
   
   // Subscribe to Eventgroup #1 for the event
   
   ceg = SomeIpAddConsumedEventGroup(csi,1);
   CheckForSomeIpError();
    
-   ceg2 = SomeIpAddConsumedEventGroup(csi2,1);
-  CheckForSomeIpError();
-
 
   // create Event Consumer
   cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
   CheckForSomeIpError();
   
-  // create Event Consumer
-  cev2 = SomeIpCreateEventConsumer(csi2,0x8002,"CallbackEvent2");
-  CheckForSomeIpError();
 
   // Enable multicast sending of events when 2 or more subscribers.
   
   SomeIpSetProperty(csi, "MulticastThreshold", 2);
-  SomeIpSetProperty(csi2, "MulticastThreshold", 2);
 
 }
 
