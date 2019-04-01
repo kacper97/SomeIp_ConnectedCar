@@ -54,6 +54,7 @@ variables
   DWORD peg2;     // provided Eventgroup 2 handle
   DWORD pev;      // provided Event handle
   DWORD gPfld_A;  // provided Field handle
+
   
   const int SERVICE_ID = 0x400f;
   const int EG1 = 1;
@@ -78,7 +79,6 @@ variables
 void OnSomeIpMethodRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
 {
   byte dataBuffer[1];
-  
   dataBuffer[0] = @TPMS::FaultType;
   
   // Return the selected fault type from the TPMS panel.
@@ -183,6 +183,7 @@ void StartServer()
 
   SomeIpAddFieldToEventgroup(peg2,gPfld_A);
   CheckForSomeIpError();
+
 
   // Initialise the field to the default pressure units, according to variable TPMS::Units
   

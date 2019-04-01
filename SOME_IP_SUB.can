@@ -15,11 +15,13 @@ variables
   BYTE payload[1];          // the message payload
    
   DWORD csi;                // consumed Service Instance handle
+  DWORD csi2;
   DWORD ceg;                // consumed Eventgroup handle for tyre pressure event
   DWORD ceg2;               // consumed Eventgroup handle for field notification
 
   DWORD cev;                // consumed Event handle
-
+  DWORD cev2;
+  
   const int SERVICE_ID = 0x400f;
   const int EG1 = 1;
   const int EG2 = 2;
@@ -48,24 +50,33 @@ On start
   // create Service Instance
   csi = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
   CheckForSomeIpError();
-    
+
+   // create Service Instance
+  csi2 = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
+  CheckForSomeIpError();
   
   // Subscribe to Eventgroup #1 for the event
   
   ceg = SomeIpAddConsumedEventGroup(csi,1);
   CheckForSomeIpError();
-  
+   
+   ceg2 = SomeIpAddConsumedEventGroup(csi2,1);
+  CheckForSomeIpError();
 
 
   // create Event Consumer
   cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
   CheckForSomeIpError();
+  
+  // create Event Consumer
+  cev2 = SomeIpCreateEventConsumer(csi2,0x8002,"CallbackEvent2");
+  CheckForSomeIpError();
 
   // Enable multicast sending of events when 2 or more subscribers.
   
   SomeIpSetProperty(csi, "MulticastThreshold", 2);
- 
-  
+  SomeIpSetProperty(csi2, "MulticastThreshold", 2);
+
 }
 
 
