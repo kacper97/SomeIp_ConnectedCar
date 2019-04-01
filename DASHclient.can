@@ -1,0 +1,414 @@
+/*@!Encoding:1252*/
+
+
+/**********************************************************************
+*  Author:  Brendan Jackman, 
+*           Automotive Control Group,
+*           Waterford Institute of Technology,
+*           Ireland.
+*           www.wit.ie/automotive
+*         
+*           (c)2019 WIT
+*
+*  SOME/IP Service Provider
+*  ========================
+*
+*  This node implements a simulated Dashboard System (DASH)
+*  client which communicates with a Tyre Pressure Monitoring system node (TPMS) using the 
+*  SOME/IP protocol.
+*
+*  This CANoe configuration can be used to experiment with different
+*  aspects of SOME/IP and its Service Discovery protocol.
+*
+*  This DASH node subscribes to the following SOME/IP service, provided by the
+*  TPMS server node.
+*
+*       Tyre_Data : Service             [service id: 0x400f]
+*       {
+*         Fields:
+*           byte pressureUnits;         [event/notification id: 0x8030]
+*         Methods:
+*           byte Read_Fault( void );    [method id: 7]
+*           byte getPressureUnits();    [method id: 31]
+*           byte setPressureUnits( byte units );  [method id: 32]
+*         EventGroup id: 1:
+*           Events:
+*             tyrePressure : byte;      [event id: 0x8001]
+*         EventGroup id: 2:
+*           Events:
+*             pressureUnits : byte;     [event id: 0x8030]
+*       }
+*
+* A user interface panel is provided to interact with the simulation using
+* system variables.
+*         
+*********************************************************************/
+
+includes
+{
+  
+}
+
+variables
+{
+  DWORD gMc;                // global method call handle
+  DWORD gMcGetter;          // getter method call
+  DWORD gMcSetter;          // setter method call
+
+  DWORD aep = 0;            // application endpoint handle
+  DWORD messageHandle = 0;  // handle of the created SOME/IP message
+  BYTE payload[1];          // the message payload
+   
+  DWORD csi;                // consumed Service Instance handle
+  DWORD ceg;                // consumed Eventgroup handle for tyre pressure event
+  DWORD ceg2;               // consumed Eventgroup handle for field notification
+
+  DWORD cev;                // consumed Event handle
+
+  const int SERVICE_ID = 0x400f;
+  const int EG1 = 1;
+  const int EG2 = 2;
+  const DWORD TYRE_PRESSURE_EVENT = 0x8001;
+  const DWORD FieldNotificationID = 0x8030;
+  const DWORD FieldGetterID = 31;
+  const DWORD FieldSetterID = 32;
+  const int CLIENT_PORTNO = 30501;
+
+}
+
+  
+/**********************************************************************
+*
+*   StartUp Handler.
+*
+*   Create the client node endpoint and consumers for events.  Initialise
+*   required method call handles and callbacks.
+*
+*********************************************************************/
+
+On start
+{
+
+
+  SomeIpSetVerbosity(3);  // Show information and warnings
+  
+  // initialize the payload.  No parameters are used in the GetFault() method though.
+  payload[0] = 0xf;
+   
+  // open application endpoint
+  aep = SomeIpOpenLocalApplicationEndpoint(17, 30501);
+  CheckForSomeIpError();
+  
+  // create Service Instance
+  csi = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
+  CheckForSomeIpError();
+    
+  // create method call
+  gMc = SomeIpCreateMethodCall(csi,7,"OnMethodResponse");
+  CheckForSomeIpError();
+  
+  //Works also without any Fibex/ARXML but only with SomeIpSetData and not SomeIpSetValueDWord (online help)
+  
+  SomeIpSetData(gMc,elCount(payload),payload);
+  CheckForSomeIpError();
+  
+  // Subscribe to two Eventgroups #1 for the event, and #2 for the field notification
+  
+  ceg = SomeIpAddConsumedEventGroup(csi,1);
+  CheckForSomeIpError();
+  
+  ceg2 = SomeIpAddConsumedEventGroup(csi,2);
+  CheckForSomeIpError();
+
+  // create Event Consumer
+  cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
+  CheckForSomeIpError();
+
+  // create field consumer as well as getter and setter method calls
+  
+  SomeIpCreateFieldConsumer(csi,FieldNotificationID,FieldGetterID,FieldSetterID,"OnFieldNotification");
+  CheckForSomeIpError();
+  
+  gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
+  CheckForSomeIpError();
+  
+  gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
+  CheckForSomeIpError();
+  
+  // Enable multicast sending of events when 2 or more subscribers.
+  
+  SomeIpSetProperty(csi, "MulticastThreshold", 2);
+}
+
+  
+/**********************************************************************
+*
+* Detect chnages in the subscribe/unscribe checkbox for the tyrePressure event.
+* Note:  The TTL parameter doesn't behave as documented in the CANoe help (?).
+*
+*********************************************************************/
+
+on sysvar_update DASH::EventSubscribe
+{
+  
+  if ( @this )
+  {
+    SomeIpSDSubscribeEventGroup( ceg, @DASH::TTL  );
+  }
+  else
+  {
+    SomeIpSDDesubscribeEventGroup( ceg );
+  }
+  CheckForSomeIpError();
+ }
+
+  
+/**********************************************************************
+* 
+* Detect chnages in the subscribe/unscribe checkbox for the pressureUnits
+* notification event.
+* Note:  The TTL parameter doesn't behave as documented in the CANoe help (?).
+*
+*********************************************************************/
+
+on sysvar_update DASH::FldSubscribe
+{
+  
+  if ( @this )
+  {
+    SomeIpSDSubscribeEventGroup( ceg2, @DASH::TTL  );
+  }
+  else
+  {
+    SomeIpSDDesubscribeEventGroup( ceg2 );
+  }
+  CheckForSomeIpError();
+}
+
+
+  
+/**********************************************************************
+*
+* Button handler to trigger a call of the GetFault() method to the TPMS server.
+*
+*********************************************************************/
+
+on sysvar sysvar::DASH::ReadBtn
+{
+      
+  if (@this == 1)     // prevent double-triggering with panel button controls
+  {
+    // call the method to read the fault code from the TPMS server
+  
+    SomeIpCallMethod(gMc);
+    CheckForSomeIpError();
+  }
+}
+
+  
+/**********************************************************************
+*
+* Response handler for the GetFault() method. 
+* Retrieves the fault status code and updates the panel display.
+*
+*********************************************************************/
+
+void OnMethodResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+  DWORD res;        // value of return parameter
+  char data[1];
+  
+
+  // get the returned parameter values
+  res = SomeIpGetData(messageResponseHandle,elCount(data), data);
+  CheckForSomeIpError();
+
+  writeEx(0,1,"\nDASH-SOME/IP: GetFault() method return value:  %d ",data[0]);
+
+  @DASH::Fault = data[0];
+}
+
+
+  
+
+  
+/**********************************************************************
+*
+* Event handler for the tyrePressure event.
+* Retrieves the current value and updates the panel display.
+*
+*********************************************************************/
+
+ 
+
+void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
+{
+ 
+  
+    DWORD res;      // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+
+    writeEx(0,1,"\nDASH-SOME/IP: tyrePressure event data received: %d ",data[0]);
+
+    @DASH::PressureDsp = data[0];
+  
+ 
+}
+
+
+  
+/**********************************************************************
+*
+* Event handler for the pressureUnits field notification.
+* Retrieves the current value and updates the panel display.
+* 
+*
+*********************************************************************/
+
+
+void OnFieldNotification(DWORD pfHandle,DWORD messageHandle)
+{
+ 
+
+    DWORD res; // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+  
+    writeEx(0,1,"\nDASH-SOME/IP: pressureUnits field notification data received: %d ",data[0]);
+
+    @DASH::Units = data[0];
+
+}
+
+  
+/**********************************************************************
+*
+* Response handler for the pressureUnits field Getter method.
+* Retrives the latest value and updates the panel display.
+*
+*********************************************************************/
+
+
+void OnFieldGetterResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+  
+  
+    DWORD res;      // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageResponseHandle,elCount(data), data);
+    CheckForSomeIpError();
+  
+    writeEx(0,1,"\nDASH-SOME/IP: GetPressureUnit() method data received: %d ",data[0]);
+
+
+    @DASH::Units = data[0];
+
+}
+
+  
+/**********************************************************************
+*
+* Response handler for the pressureUnits field Setter method.
+* No action needed as no data is returned.  The server echoes back the 
+* Setter method parameter but that's ignored here.
+* 
+*********************************************************************/
+
+void OnFieldSetterResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+    writeEx(0,1,"\nDASH-SOME/IP: SetPressureUnits() method response received.");
+
+
+  // do something here if necessary.
+}
+
+  
+/**********************************************************************
+*
+* Event handler for the pressureUnits field Get Button.
+* Triggers a call of the field's Getter method to the server.
+*
+*********************************************************************/
+
+on sysvar DASH::GetBtn
+{
+   byte dataBuffer[1];
+  
+  dataBuffer[0] = 0;
+  
+  // set value of field content 
+  // No data in Getter!!
+  
+  if (@this == 1)     // prevent double-triggering with panel button controls
+  {
+  
+    SomeIpSetData(gMcGetter,0,dataBuffer);
+    CheckForSomeIpError();
+
+    // call getter method
+    SomeIpCallMethod(gMcGetter);
+    CheckForSomeIpError();
+  }
+  
+}
+
+  
+/**********************************************************************
+*
+* Event handler for the pressureUnits field Set Button.
+* The value to be set is got from the panel via the DASH::Units variable.
+* Triggers a call of the field's Setter method to the server.
+*
+*********************************************************************/
+
+
+on sysvar DASH::SetBtn
+{
+  byte dataBuffer[1];
+  
+  dataBuffer[0] = @DASH::Units;
+  
+  if (@this == 1)     // prevent double-triggering with panel button controls
+  {
+    
+      // set value of field content 
+      SomeIpSetData(gMcSetter,1,dataBuffer);
+      CheckForSomeIpError();
+
+      // call setter method
+      SomeIpCallMethod(gMcSetter);
+      CheckForSomeIpError();
+  }
+}
+
+
+/**********************************************************************
+*
+* Generic function to catch any SOME/IP errors and log them to the
+* Write window.
+*
+*********************************************************************/
+  
+void CheckForSomeIpError()
+{
+  char buffer[1024];
+  
+  // check if last function was executed correct
+  if((SomeIpGetLastErrorText(elcount(buffer),buffer)) != 0)
+  {
+    writeEx(0,3,"\nDASH-SOME/IP: %s ",buffer);
+  } 
+  
+}

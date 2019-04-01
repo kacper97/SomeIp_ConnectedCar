@@ -1,0 +1,119 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+variables
+{
+  DWORD gMc;                // global method call handle
+  DWORD gMcGetter;          // getter method call
+  DWORD gMcSetter;          // setter method call
+
+  DWORD aep = 0;            // application endpoint handle
+  DWORD messageHandle = 0;  // handle of the created SOME/IP message
+  BYTE payload[1];          // the message payload
+   
+  DWORD csi;                // consumed Service Instance handle
+  DWORD ceg;                // consumed Eventgroup handle for tyre pressure event
+  DWORD ceg2;               // consumed Eventgroup handle for field notification
+
+  DWORD cev;                // consumed Event handle
+
+  const int SERVICE_ID = 0x400f;
+  const int EG1 = 1;
+  const int EG2 = 2;
+  const DWORD TYRE_PRESSURE_EVENT = 0x8001;
+  const DWORD FieldNotificationID = 0x8030;
+  const DWORD FieldGetterID = 31;
+  const DWORD FieldSetterID = 32;
+  const int CLIENT_PORTNO = 30501;
+
+}
+
+
+On start
+{
+
+
+  SomeIpSetVerbosity(3);  // Show information and warnings
+  
+  // initialize the payload.  No parameters are used in the GetFault() method though.
+  payload[0] = 0xf;
+   
+  // open application endpoint
+  aep = SomeIpOpenLocalApplicationEndpoint(17, 30501);
+  CheckForSomeIpError();
+  
+  // create Service Instance
+  csi = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
+  CheckForSomeIpError();
+    
+  
+  // Subscribe to Eventgroup #1 for the event
+  
+  ceg = SomeIpAddConsumedEventGroup(csi,1);
+  CheckForSomeIpError();
+  
+
+
+  // create Event Consumer
+  cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
+  CheckForSomeIpError();
+
+  // Enable multicast sending of events when 2 or more subscribers.
+  
+  SomeIpSetProperty(csi, "MulticastThreshold", 2);
+ 
+  
+}
+
+
+  
+/**********************************************************************
+*
+* Event handler for the tyrePressure event.
+* Retrieves the current value and updates the panel display.
+*
+*********************************************************************/
+
+ 
+
+void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
+{
+ 
+  
+    DWORD res;      // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+
+    writeEx(0,1,"\nSUB-SOME/IP: tyrePressure event data received: %d ",data[0]);
+
+  
+ 
+}
+
+
+
+/**********************************************************************
+*
+* Generic function to catch any SOME/IP errors and log them to the
+* Write window.
+*
+*********************************************************************/
+  
+void CheckForSomeIpError()
+{
+  char buffer[1024];
+  
+  // check if last function was executed correct
+  if((SomeIpGetLastErrorText(elcount(buffer),buffer)) != 0)
+  {
+    writeEx(0,3,"\nSUB-SOME/IP: %s ",buffer);
+  } 
+  
+}

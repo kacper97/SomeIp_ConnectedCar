@@ -1,0 +1,361 @@
+/*@!Encoding:1252*/
+
+/**********************************************************************
+*  Author:  Brendan Jackman, 
+*           Automotive Control Group,
+*           Waterford Institute of Technology,
+*           Ireland.
+*           www.wit.ie/automotive
+*         
+*           (c)2019 WIT
+*
+*  SOME/IP Service Provider
+*  ========================
+*
+*  This node implements a simulated Tyre Pressure Monitoring System (TPMS)
+*  server which communicates with a Dashboard Display node using the 
+*  SOME/IP protocol.
+*
+*  This CANoe configuration can be used to experiment with different
+*  aspects of SOME/IP and its Service Discovery protocol.
+*
+*  This TPMS node implements the following SOME/IP service:
+*
+*       Tyre_Data : Service             [service id: 0x400f]
+*       {
+*         Fields:
+*           byte pressureUnits;         [event/notification id: 0x8030]
+*         Methods:
+*           byte Read_Fault( void );    [method id: 7]
+*           byte getPressureUnits();    [method id: 31]
+*           byte setPressureUnits( byte units );  [method id: 32]
+*         EventGroup id: 1:
+*           Events:
+*             tyrePressure : byte;      [event id: 0x8001]
+*         EventGroup id: 2:
+*           Events:
+*             pressureUnits : byte;     [event id: 0x8030]
+*       }
+*
+*         
+*********************************************************************/
+
+includes
+{
+  
+}
+
+
+variables
+{
+  DWORD aep = 0;  // application endpoint handle
+  DWORD psi;      // consumed Service Instance handle
+  DWORD peg;      // provided Eventgroup 1 handle
+  DWORD peg2;     // provided Eventgroup 2 handle
+  DWORD pev;      // provided Event handle
+  DWORD gPfld_A;  // provided Field handle
+  
+  const int SERVICE_ID = 0x400f;
+  const int EG1 = 1;
+  const int EG2 = 2;
+  const DWORD TYRE_PRESSURE_EVENT = 0x8001;
+  const DWORD FieldNotificationID = 0x8030;
+  const DWORD FieldGetterID = 31;
+  const DWORD FieldSetterID = 32;
+  const int SERVER_PORTNO = 30501;
+}
+
+
+
+/**********************************************************************
+*
+* Handler for the Get_Fault() method.  
+* Returns the current fault state, obtained from the system variable TPMS::FaultType
+*
+*********************************************************************/
+
+
+void OnSomeIpMethodRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+  byte dataBuffer[1];
+  
+  dataBuffer[0] = @TPMS::FaultType;
+  
+  // Return the selected fault type from the TPMS panel.
+  
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+}
+
+
+
+/**********************************************************************
+*
+*  Startup routine.
+*  Starts up the server and then offers the service on SOME/IP only if
+*  the TPMS::Offer variable is set.
+*
+*********************************************************************/
+
+on start
+{
+    StartServer();
+    if ( @TPMS::Offer == 1 )
+      SomeIpSDSetServiceStatus(psi, 1); // Start offering this service
+    else 
+      SomeIpSDSetServiceStatus(psi, 0); // Stop offering this service
+    
+    CheckForSomeIpError();
+  
+}
+
+
+
+/**********************************************************************
+*
+*  Offer Service handler
+*
+*  Informs SOME/IP to Start or Stop offering the service depending on
+*  the TMPS::Offer variable.
+*
+*********************************************************************/
+
+on sysvar TPMS::Offer
+{
+    if ( @TPMS::Offer == 1 )
+      SomeIpSDSetServiceStatus(psi, 1); // Start offering this service
+    else 
+      SomeIpSDSetServiceStatus(psi, 0); // Stop offering this service
+    CheckForSomeIpError();
+}
+
+
+/**********************************************************************
+*
+*  Start Server.
+*
+*  Creates the SOME/IP endpoint and adds the method, event and field.
+*
+*********************************************************************/
+
+void StartServer()
+{
+
+
+  byte dataBuffer[1];
+  
+ 
+//  SomeIpSetVerbosity(3);  // Display all info and warnings
+
+  // open application endpoint
+  
+  aep = SomeIpOpenLocalApplicationEndpoint(17, SERVER_PORTNO);
+  CheckForSomeIpError();
+  
+  // create Service Instance
+  
+  psi = SomeIpCreateProvidedServiceInstance(aep,SERVICE_ID,1);
+  CheckForSomeIpError();
+  
+  SomeIpAddMethod(psi,7,"OnSomeIpMethodRequest");
+  CheckForSomeIpError();
+
+  // create Eventgroup and add the tyrePressure event to it.
+  
+  peg = SomeIpAddProvidedEventGroup(psi,EG1 );
+  CheckForSomeIpError();
+
+  // create Event and add Event to Eventgroup
+  pev = SomeIpAddEvent(psi, TYRE_PRESSURE_EVENT, "OnPrepareEvent1");
+  CheckForSomeIpError();
+
+  SomeIpAddEventToEventgroup(peg, pev);
+  CheckForSomeIpError();
+
+  // create another Eventgroup for the field notification
+  
+  peg2 = SomeIpAddProvidedEventGroup(psi,EG2 );
+  CheckForSomeIpError();
+  // create field and add field to Eventgroup
+  
+  gPfld_A = SomeIpAddField(psi, FieldNotificationID, FieldGetterID, FieldSetterID);
+  CheckForSomeIpError();
+
+  SomeIpAddFieldToEventgroup(peg2,gPfld_A);
+  CheckForSomeIpError();
+
+  // Initialise the field to the default pressure units, according to variable TPMS::Units
+  
+  dataBuffer[0] =  @TPMS::Units;;
+  
+  // set value of field data content 
+  
+  SomeIpSetData(gPfld_A,1,dataBuffer);
+  CheckForSomeIpError();
+  
+  // commit the field content, triggering the sending of a notification 
+  
+  SomeIpCommitField(gPfld_A);
+  CheckForSomeIpError();
+  
+  
+  // Overide the default field setter method so we can set panel display
+  
+  SomeIpAddMethod(psi,32,"OnSomeIpSetFieldRequest");
+  CheckForSomeIpError();
+
+  writeEx(0,1,"\nTPMS-SOME/IP: Server started." );
+  
+  // Enable multicast sending of events when 2 or more subscribers.
+  
+  SomeIpSetProperty(psi, "MulticastThreshold", 2);
+
+}
+
+
+/**********************************************************************
+*
+*  Handler for SetPressureUnits() method.
+*
+*  Sets the field value to desired value and also update the system variable 
+*  TPMS::Units
+*
+*********************************************************************/
+
+void OnSomeIpSetFieldRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+  byte dataBuffer[1];
+  
+  // Retrieve the method parameter from SOME/IP method call.
+  
+  SomeIpGetData(messageHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+  @TPMS::Units = dataBuffer[0];
+  
+  SomeIpSetData(gPfld_A,1,dataBuffer);
+  CheckForSomeIpError();
+
+  // commit field content ... notification is sent
+  SomeIpCommitField(gPfld_A);
+  CheckForSomeIpError();
+  
+  // Echo the field value in the Setter response
+  
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+}
+
+
+
+/**********************************************************************
+*
+*  Update the pressureUnits field whenever the TPMS::Units variable changes.
+*
+*********************************************************************/
+
+on sysvar sysvar::TPMS::Units
+{
+  
+  Byte dataBuffer[1];
+  
+  dataBuffer[0] = @TPMS::Units;
+
+   // set value of field data 
+  
+  SomeIpSetData(gPfld_A,1,dataBuffer);
+  CheckForSomeIpError();
+
+  // commit field content, causing a SOME/IP notification to be sent
+  
+  SomeIpCommitField(gPfld_A);
+  CheckForSomeIpError();
+}
+
+
+/**********************************************************************
+*
+*  Update the tyrePressure event cycle time whenever the TPMS::Cyclic 
+*  variable changes.
+*
+*  Note that cyclc transmission of events must be enabled in the node's
+*  SOME/IP Interaction Layer settings in CANoe.
+*
+*********************************************************************/
+
+on sysvar sysvar::TPMS::Cyclic
+{
+  // ensure that Event is sent cyclically if checkbox is ticked
+  
+  if( @this )
+    SomeIpSetProperty(pev,"CycleTimeMs",1000);
+  else
+    SomeIpSetProperty(pev,"CycleTimeMs",0);
+  
+  CheckForSomeIpError();
+  
+}
+
+
+/**********************************************************************
+*
+*  Event Preparation Handler
+*
+*  This function is called automatically by the SOME/IP Interaction Layer
+*  before an event is published.  The data associated with the event are
+*  placed in the message ready for transmission.
+*
+*********************************************************************/
+
+void OnPrepareEvent1(DWORD eventHandle, DWORD messageHandle)
+{
+  byte dataBuffer[1];
+  
+  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send tyrePressure event." );
+
+  
+  // Insert tyre pressure value in the event message.
+  
+  dataBuffer[0]=@TPMS::TyrePressure;
+    
+  SomeIpSetData(messageHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+}
+
+
+/**********************************************************************
+*
+*  Send the tyrePressure event whenever the TPMS::Units variable changes.
+*  Linking the variable to a panel slider control causes the new value to
+*  be sent whenever the slider changes.
+*
+*********************************************************************/
+
+on sysvar sysvar::TPMS::TyrePressure
+{
+   SomeIpTriggerEvent(pev);
+   CheckForSomeIpError();
+
+}
+
+
+/**********************************************************************
+*
+* Generic function to catch any SOME/IP errors and log them to the
+* Write window.
+*
+*********************************************************************/
+  
+void CheckForSomeIpError()
+{
+  char buffer[1024];
+  
+  // check if last function was executed correct
+  if((SomeIpGetLastErrorText(elcount(buffer),buffer)) != 0)
+  {
+    writeEx(0,3,"\nTPMS-SOME/IP: %s ",buffer);
+  } 
+  
+}

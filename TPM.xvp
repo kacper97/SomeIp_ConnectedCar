@@ -1,0 +1,235 @@
+<?xml version="1.0"?>
+<Panel Type="Vector.CANalyzer.Panels.PanelSerializer, Vector.CANalyzer.Panels.Serializer, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null">
+  <Object Type="Vector.CANalyzer.Panels.Runtime.Panel, Vector.CANalyzer.Panels.Common, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="Panel" Children="Controls" ControlName="TPM">
+    <Object Type="Vector.CANalyzer.Panels.Design.PanelButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="PanelButtonControl1" Children="Controls" ControlName="Panel Control Button">
+      <Property Name="Name">PanelButtonControl1</Property>
+      <Property Name="Size">78, 23</Property>
+      <Property Name="Location">31, 417</Property>
+      <Property Name="ClosePanels">False</Property>
+      <Property Name="PanelList">1;1;Help.xvp</Property>
+      <Property Name="NodeList">1;0</Property>
+      <Property Name="NetworkList">1;0</Property>
+      <Property Name="Text">Show Help</Property>
+      <Property Name="TabIndex">3</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl2" Children="Controls" ControlName="Group Box 2">
+      <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl5" Children="Controls" ControlName="Group Box 5">
+        <Object Type="Vector.CANalyzer.Panels.Design.ComboBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="ComboBoxControl3" Children="Controls" ControlName="Combo Box 2">
+          <Property Name="Name">ComboBoxControl3</Property>
+          <Property Name="Size">189, 21</Property>
+          <Property Name="Location">25, 67</Property>
+          <Property Name="DropDownWidth">156</Property>
+          <Property Name="BackColor">Window</Property>
+          <Property Name="ForeColor">WindowText</Property>
+          <Property Name="TextBackColor">Beige</Property>
+          <Property Name="DisplayLabel">Left</Property>
+          <Property Name="DescriptionText">Units:</Property>
+          <Property Name="DescriptionSize">33, 21</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;Units;1;;;-1;;;</Property>
+          <Property Name="TabIndex">7</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl3" Children="Controls" ControlName="clntFldSubscribe">
+          <Property Name="Name">CheckBoxControl3</Property>
+          <Property Name="Size">73, 17</Property>
+          <Property Name="Location">58, 103</Property>
+          <Property Name="Text">Subscribe</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;FldSubscribe;1;;;-1;;;</Property>
+          <Property Name="TabIndex">6</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.ButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="ButtonControl3" Children="Controls" ControlName="clntSetBtn">
+          <Property Name="Name">ButtonControl3</Property>
+          <Property Name="Size">75, 23</Property>
+          <Property Name="Location">139, 23</Property>
+          <Property Name="ReleaseValue">1</Property>
+          <Property Name="PressValue">0</Property>
+          <Property Name="Text">Set</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;SetBtn;1;;;-1;;;</Property>
+          <Property Name="TabIndex">1</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.ButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="ButtonControl2" Children="Controls" ControlName="clntGetBtn">
+          <Property Name="Name">ButtonControl2</Property>
+          <Property Name="Size">75, 23</Property>
+          <Property Name="Location">58, 23</Property>
+          <Property Name="ReleaseValue">1</Property>
+          <Property Name="PressValue">0</Property>
+          <Property Name="Text">Get</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;GetBtn;1;;;-1;;;</Property>
+          <Property Name="TabIndex">0</Property>
+        </Object>
+        <Property Name="Name">GroupBoxControl5</Property>
+        <Property Name="Size">238, 138</Property>
+        <Property Name="Location">20, 217</Property>
+        <Property Name="Text">Pressure Units Field</Property>
+        <Property Name="TabIndex">3</Property>
+      </Object>
+      <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl4" Children="Controls" ControlName="Group Box 4">
+        <Object Type="Vector.CANalyzer.Panels.Design.LCDControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="LCDControl2" ControlName="clntPressureDsp">
+          <Property Name="Name">LCDControl2</Property>
+          <Property Name="Size">60, 45</Property>
+          <Property Name="Location">154, 19</Property>
+          <Property Name="NumberIntDigits">2</Property>
+          <Property Name="DecimalPlaces">0</Property>
+          <Property Name="ColorOff">Beige</Property>
+          <Property Name="BackgroundIsTransparent">True</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;PressureDsp;1;;;-1;;;</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl4" Children="Controls" ControlName="clntEvSubscribe">
+          <Property Name="Name">CheckBoxControl4</Property>
+          <Property Name="Size">73, 17</Property>
+          <Property Name="Location">25, 29</Property>
+          <Property Name="Text">Subscribe</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;EventSubscribe;1;;;-1;;;</Property>
+          <Property Name="TabIndex">1</Property>
+        </Object>
+        <Property Name="Name">GroupBoxControl4</Property>
+        <Property Name="Size">238, 81</Property>
+        <Property Name="Location">20, 130</Property>
+        <Property Name="Text">Tyre Pressure Event</Property>
+        <Property Name="TabIndex">2</Property>
+      </Object>
+      <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl3" Children="Controls" ControlName="Group Box 3">
+        <Object Type="Vector.CANalyzer.Panels.Design.TextBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="TextBoxControl1" Children="Controls" ControlName="clntFault">
+          <Property Name="Name">TextBoxControl1</Property>
+          <Property Name="Size">126, 20</Property>
+          <Property Name="Location">106, 31</Property>
+          <Property Name="AlarmUpperTextColor">WindowText</Property>
+          <Property Name="ValueDecimalPlaces">0</Property>
+          <Property Name="AlarmLowerBkgColor">Salmon</Property>
+          <Property Name="ValueDisplay">Symbolic</Property>
+          <Property Name="AlarmUpperBkgColor">IndianRed</Property>
+          <Property Name="AlarmLowerTextColor">WindowText</Property>
+          <Property Name="AlarmGeneralSettings">1;0;1;1</Property>
+          <Property Name="DisplayLabel">Left</Property>
+          <Property Name="DescriptionText">Fault:</Property>
+          <Property Name="DescriptionSize">33, 20</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;Fault;1;;;-1;;;</Property>
+          <Property Name="TabIndex">1</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.ButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="ButtonControl1" Children="Controls" ControlName="clntReadBtn">
+          <Property Name="Name">ButtonControl1</Property>
+          <Property Name="Size">75, 23</Property>
+          <Property Name="Location">25, 29</Property>
+          <Property Name="ReleaseValue">1</Property>
+          <Property Name="PressValue">0</Property>
+          <Property Name="Text">Read Fault</Property>
+          <Property Name="SymbolConfiguration">5;16;DASH;;;ReadBtn;1;;;-1;;;</Property>
+          <Property Name="TabIndex">0</Property>
+        </Object>
+        <Property Name="Name">GroupBoxControl3</Property>
+        <Property Name="Size">238, 68</Property>
+        <Property Name="Location">20, 50</Property>
+        <Property Name="Text">Read Fault Method</Property>
+        <Property Name="TabIndex">1</Property>
+      </Object>
+      <Property Name="Name">GroupBoxControl2</Property>
+      <Property Name="Size">277, 369</Property>
+      <Property Name="Location">353, 28</Property>
+      <Property Name="BackColor">Beige</Property>
+      <Property Name="Text">Dashboard Client</Property>
+      <Property Name="TabIndex">1</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl1" Children="Controls" ControlName="Group Box">
+      <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl1" Children="Controls" ControlName="srvOffer">
+        <Property Name="Name">CheckBoxControl1</Property>
+        <Property Name="Size">49, 17</Property>
+        <Property Name="Location">15, 27</Property>
+        <Property Name="Text">Offer</Property>
+        <Property Name="SymbolConfiguration">5;16;TPMS;;;Offer;1;;;-1;;;</Property>
+        <Property Name="TabIndex">0</Property>
+      </Object>
+      <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl8" Children="Controls" ControlName="Group Box 7">
+        <Object Type="Vector.CANalyzer.Panels.Design.ComboBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="ComboBoxControl1" Children="Controls" ControlName="srvFault">
+          <Property Name="Name">ComboBoxControl1</Property>
+          <Property Name="Size">182, 21</Property>
+          <Property Name="Location">16, 29</Property>
+          <Property Name="BackColor">Window</Property>
+          <Property Name="ForeColor">WindowText</Property>
+          <Property Name="TextBackColor">Beige</Property>
+          <Property Name="DisplayLabel">Left</Property>
+          <Property Name="DescriptionText">Fault Type:</Property>
+          <Property Name="DescriptionSize">61, 21</Property>
+          <Property Name="SymbolConfiguration">5;16;TPMS;;;FaultType;1;;;-1;;;</Property>
+          <Property Name="TabIndex">1</Property>
+        </Object>
+        <Property Name="Name">GroupBoxControl8</Property>
+        <Property Name="Size">216, 68</Property>
+        <Property Name="Location">15, 50</Property>
+        <Property Name="BackColor">Beige</Property>
+        <Property Name="Text">Fault Method Response</Property>
+        <Property Name="TabIndex">7</Property>
+      </Object>
+      <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl9" Children="Controls" ControlName="Group Box 8">
+        <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl5" Children="Controls" ControlName="srvCyclic">
+          <Property Name="Name">CheckBoxControl5</Property>
+          <Property Name="Size">54, 17</Property>
+          <Property Name="Location">16, 58</Property>
+          <Property Name="Text">Cyclic</Property>
+          <Property Name="SymbolConfiguration">5;16;TPMS;;;Cyclic;1;;;-1;;;</Property>
+          <Property Name="TabIndex">5</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.TrackBarControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="TrackBarControl1" Children="Controls" ControlName="srvPressure">
+          <Property Name="Name">TrackBarControl1</Property>
+          <Property Name="Size">106, 47</Property>
+          <Property Name="Location">6, 19</Property>
+          <Property Name="Maximum">60</Property>
+          <Property Name="MaximumDouble">60</Property>
+          <Property Name="DisplayValue">True</Property>
+          <Property Name="CommitValue">OnlyLastValue</Property>
+          <Property Name="SymbolConfiguration">5;16;TPMS;;;TyrePressure;1;;;-1;;;</Property>
+          <Property Name="TabIndex">2</Property>
+        </Object>
+        <Object Type="Vector.CANalyzer.Panels.Design.LCDControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="LCDControl1" ControlName="srvPressureDsp">
+          <Property Name="Name">LCDControl1</Property>
+          <Property Name="Size">60, 45</Property>
+          <Property Name="Location">140, 19</Property>
+          <Property Name="NumberIntDigits">2</Property>
+          <Property Name="DecimalPlaces">0</Property>
+          <Property Name="ColorOff">Beige</Property>
+          <Property Name="BackgroundIsTransparent">True</Property>
+          <Property Name="SymbolConfiguration">5;16;TPMS;;;TyrePressure;1;;;-1;;;</Property>
+        </Object>
+        <Property Name="Name">GroupBoxControl9</Property>
+        <Property Name="Size">216, 81</Property>
+        <Property Name="Location">15, 130</Property>
+        <Property Name="Text">Tyre Pressure Event</Property>
+        <Property Name="TabIndex">8</Property>
+      </Object>
+      <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl10" Children="Controls" ControlName="Group Box 9">
+        <Object Type="Vector.CANalyzer.Panels.Design.ComboBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="ComboBoxControl2" Children="Controls" ControlName="Combo Box">
+          <Property Name="Name">ComboBoxControl2</Property>
+          <Property Name="Size">151, 21</Property>
+          <Property Name="Location">16, 68</Property>
+          <Property Name="BackColor">Window</Property>
+          <Property Name="ForeColor">WindowText</Property>
+          <Property Name="TextBackColor">Beige</Property>
+          <Property Name="DisplayLabel">Left</Property>
+          <Property Name="DescriptionText">Units</Property>
+          <Property Name="DescriptionSize">30, 21</Property>
+          <Property Name="SymbolConfiguration">5;16;TPMS;;;Units;1;;;-1;;;</Property>
+          <Property Name="TabIndex">0</Property>
+        </Object>
+        <Property Name="Name">GroupBoxControl10</Property>
+        <Property Name="Size">216, 138</Property>
+        <Property Name="Location">15, 217</Property>
+        <Property Name="Text">Pressure Units Field</Property>
+        <Property Name="TabIndex">9</Property>
+      </Object>
+      <Property Name="Name">GroupBoxControl1</Property>
+      <Property Name="Size">251, 369</Property>
+      <Property Name="Location">31, 28</Property>
+      <Property Name="BackColor">Beige</Property>
+      <Property Name="Text">TPM Server</Property>
+      <Property Name="TabIndex">0</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.55.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl1" Children="Controls" ControlName="Static Text">
+      <Property Name="Name">StaticTextControl1</Property>
+      <Property Name="Size">76, 24</Property>
+      <Property Name="Location">281, 209</Property>
+      <Property Name="Font">Microsoft Sans Serif, 14.25pt, style=Bold</Property>
+      <Property Name="Text">---O)---</Property>
+    </Object>
+    <Property Name="Name">Panel</Property>
+    <Property Name="Size">651, 453</Property>
+    <Property Name="BackColor">Honeydew</Property>
+  </Object>
+</Panel>
