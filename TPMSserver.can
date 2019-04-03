@@ -54,6 +54,7 @@ variables
   DWORD peg2;     // provided Eventgroup 2 handle
   DWORD pev;      // provided Event handle
   DWORD gPfld_A;  // provided Field handle
+  DWORD gPfld_B;   // Field Handle for Reset Error
 
   
   const int SERVICE_ID = 0x400f;
@@ -160,6 +161,8 @@ void StartServer()
   SomeIpAddMethod(psi,7,"OnSomeIpMethodRequest");
   CheckForSomeIpError();
 
+  SomeIpAddMethod(psi,39,"OnSomeIpMethodRequest");
+  CheckForSomeIpError();
   // create Eventgroup and add the tyrePressure event to it.
   
   peg = SomeIpAddProvidedEventGroup(psi,EG1 );
@@ -183,11 +186,21 @@ void StartServer()
 
   SomeIpAddFieldToEventgroup(peg2,gPfld_A);
   CheckForSomeIpError();
+  
+  //kacper
+  
+  gPfld_B = SomeIpAddField(psi, FieldNotificationID, FieldGetterID, FieldSetterID);
+  CheckForSomeIpError();
+
+  SomeIpAddFieldToEventgroup(psi,gPfld_B);
+  CheckForSomeIpError();
+
 
 
   // Initialise the field to the default pressure units, according to variable TPMS::Units
   
   dataBuffer[0] =  @TPMS::Units;;
+  dataBuffer[0] = @TPMS::FaultType;
   
   // set value of field data content 
   
@@ -199,10 +212,22 @@ void StartServer()
   SomeIpCommitField(gPfld_A);
   CheckForSomeIpError();
   
+    
+  SomeIpSetData(gPfld_B,1,dataBuffer);
+  CheckForSomeIpError();
+  
+  // commit the field content, triggering the sending of a notification 
+  
+  SomeIpCommitField(gPfld_B);
+  CheckForSomeIpError();
+  
   
   // Overide the default field setter method so we can set panel display
   
   SomeIpAddMethod(psi,32,"OnSomeIpSetFieldRequest");
+  CheckForSomeIpError();
+  
+  SomeIpAddMethod(psi,33,"OnSomeIpResetFieldRequest");
   CheckForSomeIpError();
 
   writeEx(0,1,"\nTPMS-SOME/IP: Server started." );
@@ -225,6 +250,7 @@ void StartServer()
 
 void OnSomeIpSetFieldRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
 {
+    
   byte dataBuffer[1];
   
   // Retrieve the method parameter from SOME/IP method call.
@@ -241,15 +267,38 @@ void OnSomeIpSetFieldRequest( dword methodHandle, dword messageHandle, dword mes
   SomeIpCommitField(gPfld_A);
   CheckForSomeIpError();
   
+  
   // Echo the field value in the Setter response
   
   SomeIpSetData (messageResponseHandle,1,dataBuffer);
   CheckForSomeIpError();
+  
+  
+  
+  // RESET FAULT
+  
+    
+  SomeIpGetData(messageHandle,2,dataBuffer);
+  CheckForSomeIpError();
+
+  @TPMS::FaultType = dataBuffer[0];
+  
+  SomeIpSetData(gPfld_B,2,dataBuffer);
+  CheckForSomeIpError();
+
+  // commit field content ... notification is sent
+  SomeIpCommitField(gPfld_B);
+  CheckForSomeIpError();
+  
+  
+ // Echo the field value in the Setter response
+  
+  SomeIpSetData (messageResponseHandle,2,dataBuffer);
+  CheckForSomeIpError();
+ 
 
 }
-
-
-
+  
 /**********************************************************************
 *
 *  Update the pressureUnits field whenever the TPMS::Units variable changes.
@@ -360,3 +409,12 @@ void CheckForSomeIpError()
   } 
   
 }
+
+/******
+* 
+* 
+  // KACPER 
+  // Resetting the error
+ 
+*/
+

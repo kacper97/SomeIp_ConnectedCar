@@ -56,7 +56,6 @@ variables
   DWORD gMcSetter;          // setter method call
   
   DWORD resetFaultCode;
-  DWORD resetFaultCodeGetter;
   DWORD resetFaultCodeSetter;
 
   DWORD aep = 0;            // application endpoint handle
@@ -120,7 +119,7 @@ On start
   CheckForSomeIpError();
   
   SomeIpSetData(resetFaultCode,elCount(payload),payload);
-  CheckForSomeIpError();
+  CheckForSomeIpError(); 
   
   // Subscribe to two Eventgroups #1 for the event, and #2 for the field notification
   
@@ -143,9 +142,6 @@ On start
   CheckForSomeIpError();
   
   gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
-  CheckForSomeIpError();
-  
-  resetFaultCodeGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
   CheckForSomeIpError();
   
   resetFaultCodeSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
@@ -432,10 +428,8 @@ void CheckForSomeIpError()
 
 /**********************************************************************
 *
-* Event handler for the pressureUnits field Set Button.
-* The value to be set is got from the panel via the DASH::Units variable.
-* Triggers a call of the field's Setter method to the server.
-*
+* Event handler for the reset 
+
 *********************************************************************/
 
 
@@ -443,13 +437,14 @@ on sysvar DASH::SetFaultCode
 {
   byte dataBuffer[1];
   
-  dataBuffer[0] = @DASH::SetFaultCode;
+  //set the buffer to none 
+  dataBuffer[0] = 0; 
   
   if (@this == 1)     // prevent double-triggering with panel button controls
   {
     
       // set value of field content 
-      SomeIpSetData(resetFaultCodeSetter,1,dataBuffer);
+      SomeIpSetData(resetFaultCodeSetter,2,dataBuffer);
       CheckForSomeIpError();
 
       // call setter method
