@@ -53,6 +53,7 @@ variables
   DWORD peg;      // provided Eventgroup 1 handle
   DWORD peg2;     // provided Eventgroup 2 handle
   DWORD pev;      // provided Event handle
+  DWORD dan;       // Event handle for tyre danger zone
   DWORD gPfld_A;  // provided Field handle
   DWORD gPfld_B;   // Field Handle for Reset Error
 
@@ -60,7 +61,9 @@ variables
   const int SERVICE_ID = 0x400f;
   const int EG1 = 1;
   const int EG2 = 2;
+  const int EG3 = 3;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
+  const DWORD DANGER_PRESSURE_EVENT = 0x8003;
   const DWORD FieldNotificationID = 0x8030;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
@@ -171,8 +174,14 @@ void StartServer()
   // create Event and add Event to Eventgroup
   pev = SomeIpAddEvent(psi, TYRE_PRESSURE_EVENT, "OnPrepareEvent1");
   CheckForSomeIpError();
+  
+  //danger zone
+   dan = SomeIpAddEvent(psi, DANGER_PRESSURE_EVENT, "OnPrepareEvent2");
+  CheckForSomeIpError();
 
   SomeIpAddEventToEventgroup(peg, pev);
+  CheckForSomeIpError();
+  SomeIpAddEventToEventgroup(peg, dan);
   CheckForSomeIpError();
 
   // create another Eventgroup for the field notification
@@ -187,7 +196,7 @@ void StartServer()
   SomeIpAddFieldToEventgroup(peg2,gPfld_A);
   CheckForSomeIpError();
   
-  //kacper
+  //REset fault code
   
   gPfld_B = SomeIpAddField(psi, FieldNotificationID, FieldGetterID, FieldSetterID);
   CheckForSomeIpError();
@@ -410,11 +419,38 @@ void CheckForSomeIpError()
   
 }
 
-/******
-* 
-* 
-  // KACPER 
-  // Resetting the error
- 
-*/
+
+/**********************************************************************
+*
+*  Event Preparation Handler
+*
+*  Danger Zone
+*********************************************************************/
+
+
+
+on sysvar sysvar::TPMS::DangerLimit
+{
+   SomeIpTriggerEvent(dan);
+   CheckForSomeIpError();
+
+}
+
+void OnPrepareEvent2(DWORD eventHandle, DWORD messageHandle)
+{
+  byte dataBuffer[1];
+  
+  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger tyre pressure event." );
+
+  
+  // Insert tyre pressure value in the event message.
+  
+  dataBuffer[0]=@TPMS::DangerLimit;
+    
+  SomeIpSetData(messageHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+}
+
+
 

@@ -67,6 +67,7 @@ variables
   DWORD ceg2;               // consumed Eventgroup handle for field notification
 
   DWORD cev;                // consumed Event handle
+  DWORD dan;                // danger
 
   const int SERVICE_ID = 0x400f;
   const int EG1 = 1;
@@ -131,6 +132,10 @@ On start
 
   // create Event Consumer
   cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
+  CheckForSomeIpError();
+  
+  // create Event Consumer for danger limit
+  dan = SomeIpCreateEventConsumer(csi,0x8003,"CallbackEvent2");
   CheckForSomeIpError();
 
   // create field consumer as well as getter and setter method calls
@@ -433,12 +438,11 @@ void CheckForSomeIpError()
 *********************************************************************/
 
 
-on sysvar DASH::SetFaultCode
+on sysvar_update DASH::SetFaultCode
 {
+
   byte dataBuffer[1];
-  
-  //set the buffer to none 
-  dataBuffer[0] = 0; 
+  SomeIpSDSubscribeEventGroup( dan, @DASH::DangerDsp );
   
   if (@this == 1)     // prevent double-triggering with panel button controls
   {
@@ -453,5 +457,28 @@ on sysvar DASH::SetFaultCode
   }
 }
 
+
+/*
+* method to get tyre pressure danger limit
+*/
+
+void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
+{
+ 
+  
+    DWORD res;      // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+
+    writeEx(0,1,"\nDASH-SOME/IP: DangerPressure event data received: %d ",data[0]);
+
+    @DASH::DangerDsp = data[0];
+  
+ 
+}
 
 
