@@ -57,7 +57,7 @@ variables
   
   DWORD resetFaultCode;
   DWORD resetFaultCodeSetter;
-  
+  DWORD dangerZoneSetter;
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
@@ -502,13 +502,13 @@ on sysvar_update DASH::SetFaultCode
 on sysvar_update DASH::DangerZone
 {
   
-  if ( gMcGetter>=dan )
+  if ( gMcGetter > dan )
   {
-    @sysvar::DASH::DangerZone=1;
+    @DASH::DangerZone=1;
   }
   else
   {
-     @sysvar::DASH::DangerZone=0;
+     @DASH::DangerZone=1;
   }
   CheckForSomeIpError();
 }
