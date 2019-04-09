@@ -55,7 +55,7 @@ variables
   DWORD pev;      // provided Event handle
   DWORD dan;       // Event handle for tyre danger zone
   DWORD gPfld_A;  // provided Field handle
-  DWORD gPfld_B;   // Field Handle for Reset Error
+  DWORD reset_b;   // Field Handle for Reset Error
 
   
   const int SERVICE_ID = 0x400f;
@@ -65,8 +65,11 @@ variables
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD DANGER_PRESSURE_EVENT = 0x8003;
   const DWORD FieldNotificationID = 0x8030;
+  const DWORD ResetNotificationID = 0x8033;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
+  const DWORD ResetSetterID = 33;
+  const DWORD ResetGetterId = 34;
   const int SERVER_PORTNO = 30501;
 }
 
@@ -163,9 +166,6 @@ void StartServer()
   
   SomeIpAddMethod(psi,7,"OnSomeIpMethodRequest");
   CheckForSomeIpError();
-
-  SomeIpAddMethod(psi,39,"OnSomeIpMethodRequest");
-  CheckForSomeIpError();
   // create Eventgroup and add the tyrePressure event to it.
   
   peg = SomeIpAddProvidedEventGroup(psi,EG1 );
@@ -178,11 +178,12 @@ void StartServer()
   //danger zone
    dan = SomeIpAddEvent(psi, DANGER_PRESSURE_EVENT, "OnPrepareEvent2");
   CheckForSomeIpError();
+   SomeIpAddEventToEventgroup(peg, dan);
+  CheckForSomeIpError();
 
   SomeIpAddEventToEventgroup(peg, pev);
   CheckForSomeIpError();
-  SomeIpAddEventToEventgroup(peg, dan);
-  CheckForSomeIpError();
+ 
 
   // create another Eventgroup for the field notification
   
@@ -192,20 +193,16 @@ void StartServer()
   
   gPfld_A = SomeIpAddField(psi, FieldNotificationID, FieldGetterID, FieldSetterID);
   CheckForSomeIpError();
-
+  
   SomeIpAddFieldToEventgroup(peg2,gPfld_A);
   CheckForSomeIpError();
   
-  //REset fault code
+  //RESET
+  reset_b = SomeIpAddField(psi, ResetNotificationID, ResetGetterId, ResetSetterID);
+  CheckForSomeIpError();
+  SomeIpAddFieldToEventgroup(peg2,reset_b);
+  CheckForSomeIpError();
   
-  gPfld_B = SomeIpAddField(psi, FieldNotificationID, FieldGetterID, FieldSetterID);
-  CheckForSomeIpError();
-
-  SomeIpAddFieldToEventgroup(psi,gPfld_B);
-  CheckForSomeIpError();
-
-
-
   // Initialise the field to the default pressure units, according to variable TPMS::Units
   
   dataBuffer[0] =  @TPMS::Units;;
@@ -220,22 +217,13 @@ void StartServer()
   
   SomeIpCommitField(gPfld_A);
   CheckForSomeIpError();
-  
-    
-  SomeIpSetData(gPfld_B,1,dataBuffer);
-  CheckForSomeIpError();
-  
-  // commit the field content, triggering the sending of a notification 
-  
-  SomeIpCommitField(gPfld_B);
-  CheckForSomeIpError();
-  
-  
+ 
   // Overide the default field setter method so we can set panel display
   
   SomeIpAddMethod(psi,32,"OnSomeIpSetFieldRequest");
   CheckForSomeIpError();
   
+  //Reset
   SomeIpAddMethod(psi,33,"OnSomeIpResetFieldRequest");
   CheckForSomeIpError();
 
@@ -282,30 +270,34 @@ void OnSomeIpSetFieldRequest( dword methodHandle, dword messageHandle, dword mes
   SomeIpSetData (messageResponseHandle,1,dataBuffer);
   CheckForSomeIpError();
   
-  
-  
-  // RESET FAULT
-  
+}
+
+
+void OnSomeIpResetFieldRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
     
-  SomeIpGetData(messageHandle,2,dataBuffer);
+  byte dataBuffer[1];
+  
+  // Retrieve the method parameter from SOME/IP method call.
+  
+  SomeIpGetData(messageHandle,1,dataBuffer);
   CheckForSomeIpError();
 
-  @TPMS::FaultType = dataBuffer[0];
+  @TPMS::FaultType = 0;
   
-  SomeIpSetData(gPfld_B,2,dataBuffer);
+  SomeIpSetData(reset_b,1,dataBuffer);
   CheckForSomeIpError();
 
   // commit field content ... notification is sent
-  SomeIpCommitField(gPfld_B);
+  SomeIpCommitField(reset_b);
   CheckForSomeIpError();
   
   
- // Echo the field value in the Setter response
+  // Echo the field value in the Setter response
   
-  SomeIpSetData (messageResponseHandle,2,dataBuffer);
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
   CheckForSomeIpError();
- 
-
+  
 }
   
 /**********************************************************************
@@ -418,6 +410,7 @@ void CheckForSomeIpError()
   } 
   
 }
+
 
 
 /**********************************************************************
