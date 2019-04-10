@@ -11,28 +11,32 @@ variables
   DWORD gMcSetter;          // setter method call
   
   DWORD resetFaultCode;
-  DWORD resetFaultCodeGetter;
   DWORD resetFaultCodeSetter;
+  DWORD dangerZoneSetter;
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
   BYTE payload[1];          // the message payload
    
   DWORD csi;                // consumed Service Instance handle
-  DWORD csi2;
+  
   DWORD ceg;                // consumed Eventgroup handle for tyre pressure event
   DWORD ceg2;               // consumed Eventgroup handle for field notification
 
+  DWORD pre;                //Pressure danger zone
   DWORD cev;                // consumed Event handle
-  DWORD cev2;
+  DWORD dan;                // danger
+
   
-  const int SERVICE_ID = 0x400f;
+  const int SERVICE_ID = 0x305f;
   const int EG1 = 1;
   const int EG2 = 2;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD FieldNotificationID = 0x8030;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
+  const DWORD ResetSetterID = 33;
+  const DWORD ResetGetterID = 34;
   const int CLIENT_PORTNO = 30501;
 
 }
@@ -52,9 +56,30 @@ On start
   CheckForSomeIpError();
   
   // create Service Instance
-  csi = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
+  csi = SomeIpCreateConsumedServiceInstance(aep,0x305f,1);
   CheckForSomeIpError();
-
+  
+      
+  //RESET
+  resetFaultCode = SomeIpCreateMethodCall(csi,39,"OnMethodResponse");
+  CheckForSomeIpError();
+   //RESET
+  SomeIpSetData(resetFaultCode,elCount(payload),payload);
+  CheckForSomeIpError(); 
+   // create Event Consumer for danger limit
+  dan = SomeIpCreateEventConsumer(csi,0x8003,"CallbackEvent2");
+  CheckForSomeIpError();
+  gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
+  CheckForSomeIpError();
+  
+  gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
+  CheckForSomeIpError();
+  
+  //RESET
+  resetFaultCodeSetter = SomeIpCreateMethodCall(csi,ResetSetterID,"onFaultResetResponse");
+  CheckForSomeIpError();
+  
+  
   
   // Subscribe to Eventgroup #1 for the event
   
@@ -98,6 +123,96 @@ void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
 
     writeEx(0,1,"\nSUB-SOME/IP: tyrePressure event data received: %d ",data[0]);
 
+    @SUB2::PressureDsp = data[0];
+   
+}
+
+void OnResetNotification(DWORD pfHandle,DWORD messageHandle)
+{
+ 
+
+    DWORD res; // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+  
+    writeEx(0,1,"\nSUB2-SOME/IP: Reset field notification data received: %d ",data[0]);
+
+    //@SUB2::Fault = data[0];
+
+}
+
+void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+    writeEx(0,1,"\nSUB2-SOME/IP: Reset Fault Code() method response received.");
+  // do something here if necessary.
+}
+
+
+/**********************************************************************
+*
+* Event handler for the reset 
+
+*********************************************************************/
+
+
+on sysvar_update SUB2::SetFaultCode
+{
+
+  byte dataBuffer[1];
+   SomeIpSDSubscribeEventGroup( dan, @SUB2::DangerDsp );
+  
+  if (@this == 1)     // prevent double-triggering with panel button controls
+  {
+    
+      // set value of field content 
+      SomeIpSetData(resetFaultCodeSetter,2,dataBuffer);
+      CheckForSomeIpError();
+
+      // call setter method
+      SomeIpCallMethod(resetFaultCodeSetter);
+      CheckForSomeIpError();
+  }
+}
+
+
+on sysvar SUB2::DangerZone
+{
+  if ( gMcGetter > dan )
+  {
+    @SUB2::DangerZone==1;
+  }
+  else
+  {
+     @SUB2::DangerZone==0;
+  }
+  CheckForSomeIpError();
+}
+
+
+
+/*
+* method to get tyre pressure danger limit
+*/
+
+void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
+{
+ 
+  
+    DWORD res;      // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+
+    writeEx(0,1,"\nSUB2-SOME/IP: DangerPressure event data received: %d ",data[0]);
+
+    @SUB2::DangerDsp = data[0];
   
  
 }

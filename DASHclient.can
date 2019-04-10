@@ -2,7 +2,7 @@
 
 
 /**********************************************************************
-*  Author:  Brendan Jackman, 
+*  Author:  Kacper, 
 *           Automotive Control Group,
 *           Waterford Institute of Technology,
 *           Ireland.
@@ -54,10 +54,6 @@ variables
   DWORD gMc;                // global method call handle
   DWORD gMcGetter;          // getter method call
   DWORD gMcSetter;          // setter method call
-  
-  DWORD resetFaultCode;
-  DWORD resetFaultCodeSetter;
-  DWORD dangerZoneSetter;
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
@@ -66,24 +62,16 @@ variables
   DWORD csi;                // consumed Service Instance handle
   DWORD ceg;                // consumed Eventgroup handle for tyre pressure event
   DWORD ceg2;               // consumed Eventgroup handle for field notification
-  DWORD ceg3;               // RESET
- 
-  
 
-  DWORD pre;                //Pressure danger zone
   DWORD cev;                // consumed Event handle
-  DWORD dan;                // danger
 
   const int SERVICE_ID = 0x400f;
   const int EG1 = 1;
   const int EG2 = 2;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD FieldNotificationID = 0x8030;
-  const DWORD ResetNotificationID = 0x8033;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
-  const DWORD ResetSetterID = 33;
-  const DWORD ResetGetterId = 34;
   const int CLIENT_PORTNO = 30501;
 
 }
@@ -118,20 +106,11 @@ On start
   // create method call
   gMc = SomeIpCreateMethodCall(csi,7,"OnMethodResponse");
   CheckForSomeIpError();
- 
-    
-  //RESET
-  resetFaultCode = SomeIpCreateMethodCall(csi,39,"OnMethodResponse");
-  CheckForSomeIpError();
   
   //Works also without any Fibex/ARXML but only with SomeIpSetData and not SomeIpSetValueDWord (online help)
   
   SomeIpSetData(gMc,elCount(payload),payload);
   CheckForSomeIpError();
-  
-  //RESET
-  SomeIpSetData(resetFaultCode,elCount(payload),payload);
-  CheckForSomeIpError(); 
   
   // Subscribe to two Eventgroups #1 for the event, and #2 for the field notification
   
@@ -140,16 +119,9 @@ On start
   
   ceg2 = SomeIpAddConsumedEventGroup(csi,2);
   CheckForSomeIpError();
-  
-  ceg3 == SomeIpAddConsumedEventGroup(csi,3);
-  CheckForSomeIpError();
-  
+
   // create Event Consumer
   cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
-  CheckForSomeIpError();
-  
-  // create Event Consumer for danger limit
-  dan = SomeIpCreateEventConsumer(csi,0x8003,"CallbackEvent2");
   CheckForSomeIpError();
 
   // create field consumer as well as getter and setter method calls
@@ -157,21 +129,11 @@ On start
   SomeIpCreateFieldConsumer(csi,FieldNotificationID,FieldGetterID,FieldSetterID,"OnFieldNotification");
   CheckForSomeIpError();
   
-  SomeIpCreateFieldConsumer(csi,ResetNotificationID,ResetSetterID,ResetGetterId,"OnResetNotification");
-  CheckForSomeIpError();
-  
   gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
   CheckForSomeIpError();
   
   gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
   CheckForSomeIpError();
-  
-  //RESET
-  resetFaultCodeSetter = SomeIpCreateMethodCall(csi,ResetSetterID,"onFaultResetResponse");
-  CheckForSomeIpError();
-  
-  // INITIALIZING THE DANGER ZONE VALUE TO BE NO DANGER BY DEFAULT
-  // dataBuffer[0] = @DASH::DangerZone;
   
   // Enable multicast sending of events when 2 or more subscribers.
   
@@ -265,7 +227,9 @@ void OnMethodResponse(dword methodCallHandle, dword messageResponseHandle )
 
   @DASH::Fault = data[0];
 }
- 
+
+
+  
 
   
 /**********************************************************************
@@ -325,24 +289,6 @@ void OnFieldNotification(DWORD pfHandle,DWORD messageHandle)
 
 }
 
-void OnResetNotification(DWORD pfHandle,DWORD messageHandle)
-{
- 
-
-    DWORD res; // value of return parameter
-    char data[1];
-  
-
-    // get the returned parameter values
-    res = SomeIpGetData(messageHandle,elCount(data), data);
-    CheckForSomeIpError();
-  
-    writeEx(0,1,"\nDASH-SOME/IP: Reset field notification data received: %d ",data[0]);
-
-    @DASH::Fault = data[0];
-
-}
-
   
 /**********************************************************************
 *
@@ -383,12 +329,8 @@ void OnFieldGetterResponse(dword methodCallHandle, dword messageResponseHandle )
 void OnFieldSetterResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nDASH-SOME/IP: SetPressureUnits() method response received.");
-  // do something here if necessary.
-}
 
-void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
-{
-    writeEx(0,1,"\nDASH-SOME/IP: Reset Fault Code F() method response received.");
+
   // do something here if necessary.
 }
 
@@ -470,72 +412,3 @@ void CheckForSomeIpError()
   } 
   
 }
-
-
-/**********************************************************************
-*
-* Event handler for the reset 
-
-*********************************************************************/
-
-
-on sysvar_update DASH::SetFaultCode
-{
-
-  byte dataBuffer[1];
-    SomeIpSDSubscribeEventGroup( dan, @DASH::DangerDsp );
-  
-  if (@this == 1)     // prevent double-triggering with panel button controls
-  {
-    
-      // set value of field content 
-      SomeIpSetData(resetFaultCodeSetter,2,dataBuffer);
-      CheckForSomeIpError();
-
-      // call setter method
-      SomeIpCallMethod(resetFaultCodeSetter);
-      CheckForSomeIpError();
-  }
-}
-
-
-on sysvar_update DASH::DangerZone
-{
-  
-  if ( gMcGetter > dan )
-  {
-    @DASH::DangerZone=1;
-  }
-  else
-  {
-     @DASH::DangerZone=1;
-  }
-  CheckForSomeIpError();
-}
-
-
-
-/*
-* method to get tyre pressure danger limit
-*/
-
-void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
-{
- 
-  
-    DWORD res;      // value of return parameter
-    char data[1];
-  
-
-    // get the returned parameter values
-    res = SomeIpGetData(messageHandle,elCount(data), data);
-    CheckForSomeIpError();
-
-    writeEx(0,1,"\nDASH-SOME/IP: DangerPressure event data received: %d ",data[0]);
-
-    @DASH::DangerDsp = data[0];
-  
- 
-}
-
-

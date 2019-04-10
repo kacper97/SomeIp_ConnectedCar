@@ -1,8 +1,7 @@
 /*@!Encoding:1252*/
 
 /**********************************************************************
-*  Author:  Brendan Jackman, 
-*           Automotive Control Group,
+*  Author:  Kacper Woloszyn, 
 *           Waterford Institute of Technology,
 *           Ireland.
 *           www.wit.ie/automotive
@@ -61,7 +60,6 @@ variables
   const int SERVICE_ID = 0x400f;
   const int EG1 = 1;
   const int EG2 = 2;
-  const int EG3 = 3;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD DANGER_PRESSURE_EVENT = 0x8003;
   const DWORD FieldNotificationID = 0x8030;
@@ -178,6 +176,7 @@ void StartServer()
   //danger zone
    dan = SomeIpAddEvent(psi, DANGER_PRESSURE_EVENT, "OnPrepareEvent2");
   CheckForSomeIpError();
+  
    SomeIpAddEventToEventgroup(peg, dan);
   CheckForSomeIpError();
 
@@ -436,7 +435,7 @@ void OnPrepareEvent2(DWORD eventHandle, DWORD messageHandle)
   writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger tyre pressure event." );
 
   
-  // Insert tyre pressure value in the event message.
+  // Insert danger limit value in the event message.
   
   dataBuffer[0]=@TPMS::DangerLimit;
     
