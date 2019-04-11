@@ -65,7 +65,7 @@ variables
 
   DWORD cev;                // consumed Event handle
 
-  const int SERVICE_ID = 0x400f;
+  const int SERVICE_ID = 0x305f;
   const int EG1 = 1;
   const int EG2 = 2;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
@@ -100,7 +100,7 @@ On start
   CheckForSomeIpError();
   
   // create Service Instance
-  csi = SomeIpCreateConsumedServiceInstance(aep,0x400F,1);
+  csi = SomeIpCreateConsumedServiceInstance(aep,0x305f,1);
   CheckForSomeIpError();
     
   // create method call

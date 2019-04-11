@@ -55,19 +55,22 @@ variables
   DWORD dan;       // Event handle for tyre danger zone
   DWORD gPfld_A;  // provided Field handle
   DWORD reset_b;   // Field Handle for Reset Error
-
+  dword dan_c;    // field handle for danger
   
-  const int SERVICE_ID = 0x400f;
+  const int SERVICE_ID = 0x305f;
   const int EG1 = 1;
   const int EG2 = 2;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD DANGER_PRESSURE_EVENT = 0x8003;
   const DWORD FieldNotificationID = 0x8030;
   const DWORD ResetNotificationID = 0x8033;
+  const DWORD DanNotificationID = 0x8034;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
   const DWORD ResetSetterID = 33;
   const DWORD ResetGetterId = 34;
+  const DWORD DanGetterId =35;
+  const DWORD DanSetterId =36;
   const int SERVER_PORTNO = 30501;
 }
 
@@ -202,6 +205,13 @@ void StartServer()
   SomeIpAddFieldToEventgroup(peg2,reset_b);
   CheckForSomeIpError();
   
+  
+    //Dan
+  dan_c = SomeIpAddField(psi, DanNotificationID, DanGetterId, DanSetterId);
+  CheckForSomeIpError();
+  SomeIpAddFieldToEventgroup(peg2,reset_b);
+  CheckForSomeIpError();
+  
   // Initialise the field to the default pressure units, according to variable TPMS::Units
   
   dataBuffer[0] =  @TPMS::Units;;
@@ -224,6 +234,9 @@ void StartServer()
   
   //Reset
   SomeIpAddMethod(psi,33,"OnSomeIpResetFieldRequest");
+  CheckForSomeIpError();
+  
+  SomeIpAddMethod(psi,34,"OnSomeIpDanFieldRequest");
   CheckForSomeIpError();
 
   writeEx(0,1,"\nTPMS-SOME/IP: Server started." );
@@ -272,7 +285,9 @@ void OnSomeIpSetFieldRequest( dword methodHandle, dword messageHandle, dword mes
 }
 
 
-void OnSomeIpResetFieldRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+
+
+void OnSomeIpDanFieldRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
 {
     
   byte dataBuffer[1];
@@ -282,14 +297,42 @@ void OnSomeIpResetFieldRequest( dword methodHandle, dword messageHandle, dword m
   SomeIpGetData(messageHandle,1,dataBuffer);
   CheckForSomeIpError();
 
-  @TPMS::FaultType = 0;
+  @TPMS::DangerLimit = dataBuffer[0];
   
-  SomeIpSetData(reset_b,1,dataBuffer);
+  SomeIpSetData(dan_c,1,dataBuffer);
   CheckForSomeIpError();
 
   // commit field content ... notification is sent
-  SomeIpCommitField(reset_b);
+  SomeIpCommitField(dan_c);
   CheckForSomeIpError();
+  
+  
+  // Echo the field value in the Setter response
+  
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+  
+}
+
+
+void OnSomeIpResetFieldRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+    
+  byte dataBuffer[1];
+  
+  // Retrieve the meth  od parameter from SOME/IP method call.
+  
+  SomeIpGetData(messageHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+  @TPMS::FaultType = 0;
+  
+  //SomeIpSetData(reset_b,1,dataBuffer);
+  //CheckForSomeIpError();
+
+  // commit field content ... notification is sent
+ // SomeIpCommitField(reset_b);
+  //CheckForSomeIpError();
   
   
   // Echo the field value in the Setter response

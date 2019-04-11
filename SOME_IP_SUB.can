@@ -13,6 +13,7 @@ variables
   DWORD resetFaultCode;
   DWORD resetFaultCodeSetter;
   DWORD dangerZoneSetter;
+  dword danGetter;
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
@@ -37,10 +38,10 @@ variables
   const DWORD FieldSetterID = 32;
   const DWORD ResetSetterID = 33;
   const DWORD ResetGetterID = 34;
+  const DWORD DanGetterID =35;
   const int CLIENT_PORTNO = 30501;
 
 }
-
 
 On start
 {
@@ -75,6 +76,8 @@ On start
   gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
   CheckForSomeIpError();
   
+  danGetter = SomeIpCreateMethodCall(csi,DanGetterID,"OnDanFieldGetterResponse");
+  CheckForSomeIpError();
   //RESET
   resetFaultCodeSetter = SomeIpCreateMethodCall(csi,ResetSetterID,"onFaultResetResponse");
   CheckForSomeIpError();
@@ -163,13 +166,13 @@ on sysvar_update SUB2::SetFaultCode
 {
 
   byte dataBuffer[1];
-   SomeIpSDSubscribeEventGroup( dan, @SUB2::DangerDsp );
+   //SomeIpSDSubscribeEventGroup( dan, 1 );
   
   if (@this == 1)     // prevent double-triggering with panel button controls
   {
-    
+      dataBuffer[0]=0;
       // set value of field content 
-      SomeIpSetData(resetFaultCodeSetter,2,dataBuffer);
+      SomeIpSetData(resetFaultCodeSetter,1,dataBuffer);
       CheckForSomeIpError();
 
       // call setter method
@@ -181,13 +184,13 @@ on sysvar_update SUB2::SetFaultCode
 
 on sysvar SUB2::DangerZone
 {
-  if ( gMcGetter > dan )
+if (gMcGetter> danGetter )
   {
-    @SUB2::DangerZone==1;
+    @sysvar::SUB2::DangerZone==1;
   }
   else
   {
-     @SUB2::DangerZone==0;
+   @sysvar::SUB2::DangerZone==0;
   }
   CheckForSomeIpError();
 }
@@ -217,7 +220,37 @@ void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
  
 }
 
+on key 'r'
+{
+ byte dataBuffer[1];
+      dataBuffer[0]=0;
+  
+  {
+      // set value of field content 
+      SomeIpSetData(resetFaultCodeSetter,1,dataBuffer);
+      CheckForSomeIpError();
 
+      // call setter method
+      SomeIpCallMethod(resetFaultCodeSetter);
+      CheckForSomeIpError();
+  }
+} 
+    
+
+on key '4'
+{
+  // set danger limit 40
+}
+
+on key '5'
+{
+  // set danger limit 50
+}
+
+on key 'g'
+{
+  // gets the current danger limit and displays the write
+}
 
 /**********************************************************************
 *
