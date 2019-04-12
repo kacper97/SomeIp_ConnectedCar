@@ -16,6 +16,7 @@ variables
   DWORD setDangerLimithigh;
   DWORD dangerZoneSetter;
   dword danGetter;
+  DWORD DangerMc;  // global to get g val
 
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
@@ -91,6 +92,16 @@ On start
   //50
     setDangerLimithigh = SomeIpCreateMethodCall(csi,setDangerLimithighID,"onDanFiftyResponse");
   CheckForSomeIpError();
+  
+  // G prress
+  DangerMc = SomeIpCreateMethodCall(csi,12,"OnDangerResponse");
+  CheckForSomeIpError();
+  
+  //Works also without any Fibex/ARXML but only with SomeIpSetData and not SomeIpSetValueDWord (online help)
+  
+  SomeIpSetData(DangerMc,elCount(payload),payload);
+  CheckForSomeIpError();
+  
   
   
   // Subscribe to Eventgroup #1 for the event
@@ -307,17 +318,8 @@ on key '5'
 
 on key 'g'
 {
- dword res;
-  char data[1];
-  
-  res = SomeIpGetData(messageHandle,elCount(data),data);
-  CheckForSomeIpError();
-  
-  
-    writeEx(0,1,"\nSUB2-SOME/IP: DangerPressure event data received: %d ",data[0]);
-
-    @SUB2::DangerDsp = data[0];
-
+    SomeIpCallMethod(DangerMc);
+    CheckForSomeIpError();
 }
 
 /**********************************************************************
@@ -338,3 +340,20 @@ void CheckForSomeIpError()
   } 
   
 }
+
+
+void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+  DWORD res;        // value of return parameter
+  char data[1];
+  
+
+  // get the returned parameter values
+  res = SomeIpGetData(messageResponseHandle,elCount(data), data);
+  CheckForSomeIpError();
+
+  writeEx(0,1,"\nDASH-SOME/IP: Get Danger Value called() method return value:  %d ",data[0]);
+
+  @SUB2::DangerDsp = data[0];
+}
+

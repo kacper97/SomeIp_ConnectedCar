@@ -104,6 +104,17 @@ void OnSomeIpMethodRequest( dword methodHandle, dword messageHandle, dword messa
 }
 
 
+void onDangerZoneRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+  byte dataBuffer[1];
+  dataBuffer[0] = @TPMS::DangerLimit;
+  
+  // Return the selected Danger limit type from the TPMS panel.
+  
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+}
+
 
 /**********************************************************************
 *
@@ -222,7 +233,9 @@ void StartServer()
   CheckForSomeIpError();
   SomeIpAddFieldToEventgroup(peg2,danlimit_high);
   CheckForSomeIpError();
-  
+  //G
+  SomeIpAddMethod(psi,12,"onDangerZoneRequest");
+  CheckForSomeIpError();
   
     //Dan
   dan_c = SomeIpAddField(psi, DanNotificationID, DanGetterId, DanSetterId);
