@@ -85,10 +85,10 @@ On start
   //RESET
   resetFaultCodeSetter = SomeIpCreateMethodCall(csi,ResetSetterID,"onFaultResetResponse");
   CheckForSomeIpError();
-  
+  //40
   setDangerLimitlow = SomeIpCreateMethodCall(csi,setDangerLimitlowID,"onDanFortyResponse");
   CheckForSomeIpError();
-  
+  //50
     setDangerLimithigh = SomeIpCreateMethodCall(csi,setDangerLimithighID,"onDanFiftyResponse");
   CheckForSomeIpError();
   
@@ -217,6 +217,20 @@ if (gMcGetter> danGetter )
   CheckForSomeIpError();
 }
 
+void OnDanFieldGetterResponse(DWORD danHandle,dword messageHandle){
+    
+    DWORD res;      // value of return parameter
+    char data[1];
+  
+
+    // get the returned parameter values
+    res = SomeIpGetData(messageHandle,elCount(data), data);
+    CheckForSomeIpError();
+
+    writeEx(0,1,"\nSUB2-SOME/IP: DangerPressure event data received: %d ",data[0]);
+
+
+}
 
 
 /*
@@ -293,7 +307,17 @@ on key '5'
 
 on key 'g'
 {
-  // gets the current danger limit and displays the write
+ dword res;
+  char data[1];
+  
+  res = SomeIpGetData(messageHandle,elCount(data),data);
+  CheckForSomeIpError();
+  
+  
+    writeEx(0,1,"\nSUB2-SOME/IP: DangerPressure event data received: %d ",data[0]);
+
+    @SUB2::DangerDsp = data[0];
+
 }
 
 /**********************************************************************
