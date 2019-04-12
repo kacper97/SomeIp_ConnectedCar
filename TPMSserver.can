@@ -55,6 +55,8 @@ variables
   DWORD dan;       // Event handle for tyre danger zone
   DWORD gPfld_A;  // provided Field handle
   DWORD reset_b;   // Field Handle for Reset Error
+  DWORD danlimit_low;   // Field Handle for Reset Error
+  DWORD danlimit_high;
   dword dan_c;    // field handle for danger
   
   const int SERVICE_ID = 0x305f;
@@ -65,11 +67,17 @@ variables
   const DWORD FieldNotificationID = 0x8030;
   const DWORD ResetNotificationID = 0x8033;
   const DWORD DanNotificationID = 0x8034;
+  const DWORD DanNotificationLowID = 0x8035;
+  const dword DanNotificationHighID = 0x8040;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
   const DWORD ResetSetterID = 33;
   const DWORD ResetGetterId = 34;
   const DWORD DanGetterId =35;
+  const DWORD setDangerLimitlowID = 37;
+  const DWORD getDangerLimitLowID = 38;
+  const DWORD setDangerLimitHighID =40;
+  const DWORD getDangerLimitHighID =41;
   const DWORD DanSetterId =36;
   const int SERVER_PORTNO = 30501;
 }
@@ -204,6 +212,16 @@ void StartServer()
   CheckForSomeIpError();
   SomeIpAddFieldToEventgroup(peg2,reset_b);
   CheckForSomeIpError();
+  //40
+  danlimit_low = SomeIpAddField(psi, DanNotificationLowID, getDangerLimitLowID, setDangerLimitlowID);
+  CheckForSomeIpError();
+  SomeIpAddFieldToEventgroup(peg2,danlimit_low);
+  CheckForSomeIpError();
+    //50
+  danlimit_high= SomeIpAddField(psi, DanNotificationHighID, getDangerLimitHighID, setDangerLimitHighID);
+  CheckForSomeIpError();
+  SomeIpAddFieldToEventgroup(peg2,danlimit_high);
+  CheckForSomeIpError();
   
   
     //Dan
@@ -237,6 +255,14 @@ void StartServer()
   CheckForSomeIpError();
   
   SomeIpAddMethod(psi,34,"OnSomeIpDanFieldRequest");
+  CheckForSomeIpError();
+  
+  //40
+  SomeIpAddMethod(psi,37,"OnFortySet");
+  CheckForSomeIpError();
+  
+    //50
+  SomeIpAddMethod(psi,40,"OnFiftySet");
   CheckForSomeIpError();
 
   writeEx(0,1,"\nTPMS-SOME/IP: Server started." );
@@ -326,6 +352,60 @@ void OnSomeIpResetFieldRequest( dword methodHandle, dword messageHandle, dword m
   CheckForSomeIpError();
 
   @TPMS::FaultType = 0;
+  
+  //SomeIpSetData(reset_b,1,dataBuffer);
+  //CheckForSomeIpError();
+
+  // commit field content ... notification is sent
+ // SomeIpCommitField(reset_b);
+  //CheckForSomeIpError();
+  
+  
+  // Echo the field value in the Setter response
+  
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+  
+}
+
+void OnFortySet( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+    
+  byte dataBuffer[1];
+  
+  // Retrieve the meth  od parameter from SOME/IP method call.
+  
+  SomeIpGetData(messageHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+  @TPMS::DangerLimit = 40;
+  
+  //SomeIpSetData(reset_b,1,dataBuffer);
+  //CheckForSomeIpError();
+
+  // commit field content ... notification is sent
+ // SomeIpCommitField(reset_b);
+  //CheckForSomeIpError();
+  
+  
+  // Echo the field value in the Setter response
+  
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+  
+}
+
+void OnFiftySet( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+    
+  byte dataBuffer[1];
+  
+  // Retrieve the meth  od parameter from SOME/IP method call.
+  
+  SomeIpGetData(messageHandle,1,dataBuffer);
+  CheckForSomeIpError();
+
+  @TPMS::DangerLimit = 50;
   
   //SomeIpSetData(reset_b,1,dataBuffer);
   //CheckForSomeIpError();
