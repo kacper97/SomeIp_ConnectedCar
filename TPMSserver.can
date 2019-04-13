@@ -51,24 +51,29 @@ variables
   DWORD psi;      // consumed Service Instance handle
   DWORD peg;      // provided Eventgroup 1 handle
   DWORD peg2;     // provided Eventgroup 2 handle
+  DWORD peg3;     // EVENTGROUp 3 for Zone
   DWORD pev;      // provided Event handle
   DWORD dan;       // Event handle for tyre danger zone
   DWORD gPfld_A;  // provided Field handle
   DWORD reset_b;   // Field Handle for Reset Error
+  DWORD dan_zone_limit; // field for zone 
   DWORD danlimit_low;   // Field Handle for Reset Error
   DWORD danlimit_high;
-  dword dan_c;    // field handle for danger
+  DWORD dan_c;    // field handle for danger
   
   const int SERVICE_ID = 0x305f;
   const int EG1 = 1;
   const int EG2 = 2;
+  const int EG3 = 3;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD DANGER_PRESSURE_EVENT = 0x8003;
+  const DWORD ZONE_EVENT = 0x8005;
   const DWORD FieldNotificationID = 0x8030;
   const DWORD ResetNotificationID = 0x8033;
   const DWORD DanNotificationID = 0x8034;
   const DWORD DanNotificationLowID = 0x8035;
   const dword DanNotificationHighID = 0x8040;
+  const dword DanZoneNotificationID = 0x8045;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
   const DWORD ResetSetterID = 33;
@@ -79,6 +84,9 @@ variables
   const DWORD setDangerLimitHighID =40;
   const DWORD getDangerLimitHighID =41;
   const DWORD DanSetterId =36;
+  const DWORD danZoneGetterID =45;
+  const DWORD danZoneSetterId =46;
+
   const int SERVER_PORTNO = 30501;
 }
 
@@ -103,13 +111,13 @@ void OnSomeIpMethodRequest( dword methodHandle, dword messageHandle, dword messa
   CheckForSomeIpError();
 }
 
-
+//Danger Slider
 void onDangerZoneRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
 {
   byte dataBuffer[1];
   dataBuffer[0] = @TPMS::DangerLimit;
   
-  // Return the selected Danger limit type from the TPMS panel.
+  // Return the selected fault type from the TPMS panel.
   
   SomeIpSetData (messageResponseHandle,1,dataBuffer);
   CheckForSomeIpError();
@@ -195,8 +203,13 @@ void StartServer()
   pev = SomeIpAddEvent(psi, TYRE_PRESSURE_EVENT, "OnPrepareEvent1");
   CheckForSomeIpError();
   
-  //danger zone
+  //danger 
    dan = SomeIpAddEvent(psi, DANGER_PRESSURE_EVENT, "OnPrepareEvent2");
+  CheckForSomeIpError();
+  
+    
+  //danger zone
+   dan_zone_limit = SomeIpAddEvent(psi, ZONE_EVENT, "OnPrepareEvent3");
   CheckForSomeIpError();
   
    SomeIpAddEventToEventgroup(peg, dan);
@@ -204,11 +217,18 @@ void StartServer()
 
   SomeIpAddEventToEventgroup(peg, pev);
   CheckForSomeIpError();
+  
+  SomeIpAddEventToEventgroup(peg3, dan_zone_limit);
+  CheckForSomeIpError();
  
 
   // create another Eventgroup for the field notification
   
   peg2 = SomeIpAddProvidedEventGroup(psi,EG2 );
+  CheckForSomeIpError();
+  
+  //Event group for zone limit
+    peg3 = SomeIpAddProvidedEventGroup(psi,EG3 );
   CheckForSomeIpError();
   // create field and add field to Eventgroup
   
@@ -243,10 +263,19 @@ void StartServer()
   SomeIpAddFieldToEventgroup(peg2,reset_b);
   CheckForSomeIpError();
   
+  
+  
+    //DAN ZONE LIMIT
+  dan_zone_limit = SomeIpAddField(psi, DanZoneNotificationID, danZoneGetterID, ResetSetterID);
+  CheckForSomeIpError();
+  SomeIpAddFieldToEventgroup(peg3,dan_zone_limit);
+  CheckForSomeIpError();
   // Initialise the field to the default pressure units, according to variable TPMS::Units
   
   dataBuffer[0] =  @TPMS::Units;;
   dataBuffer[0] = @TPMS::FaultType;
+  dataBuffer[0] = @TPMS::DangerZone;
+
   
   // set value of field data content 
   
@@ -277,6 +306,8 @@ void StartServer()
     //50
   SomeIpAddMethod(psi,40,"OnFiftySet");
   CheckForSomeIpError();
+  
+  
 
   writeEx(0,1,"\nTPMS-SOME/IP: Server started." );
   
@@ -580,7 +611,25 @@ void OnPrepareEvent2(DWORD eventHandle, DWORD messageHandle)
 
 }
 
+on sysvar sysvar::TPMS::DangerZone
+{
+  
+  Byte dataBuffer[1];
+  
+  dataBuffer[0] = @TPMS::DangerZone;
 
+   // set value of field data 
+  if(@TPMS::TyrePressure>@TPMS::DangerZone )
+  {
+  SomeIpSetData(dan_zone_limit,1,dataBuffer);
+  CheckForSomeIpError();
+  }else
+
+  // commit field content, causing a SOME/IP notification to be sent
+  
+ // SomeIpCommitField(gPfld_A);
+  CheckForSomeIpError();
+}
 
 
 

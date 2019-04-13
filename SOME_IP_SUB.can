@@ -9,12 +9,13 @@ variables
   DWORD gMc;                // global method call handle
   DWORD gMcGetter;          // getter method call
   DWORD gMcSetter;          // setter method call
+  DWORD danZoneGetter;             //Global method call handle for danger zone
+ const DWORD danZoneGetterID =45;
   
   DWORD resetFaultCode;
   DWORD resetFaultCodeSetter;
   DWORD setDangerLimitlow;
   DWORD setDangerLimithigh;
-  DWORD dangerZoneSetter;
   dword danGetter;
   DWORD DangerMc;  // global to get g val
 
@@ -44,6 +45,7 @@ variables
   const DWORD DanGetterID =35;
   const DWORD setDangerLimitlowID = 37;
   const DWORD setDangerLimithighID = 40;
+
   const int CLIENT_PORTNO = 30501;
 
 }
@@ -77,10 +79,12 @@ On start
   CheckForSomeIpError();
   gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
   CheckForSomeIpError();
+  danZoneGetter = SomeIpCreateMethodCall(csi,danZoneGetterID,"OnZoneGetterResponse");
+  CheckForSomeIpError();
   
   gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
   CheckForSomeIpError();
-  
+  // Gets the current Value of danger limit
   danGetter = SomeIpCreateMethodCall(csi,DanGetterID,"OnDanFieldGetterResponse");
   CheckForSomeIpError();
   //RESET
@@ -180,6 +184,12 @@ void onDanFortyResponse(dword methodCallHandle, dword messageResponseHandle )
   // do something here if necessary.
 }
 
+void OnZoneGetterResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+    writeEx(0,1,"\nSUB2-SOME/IP: dan zone Code() method response received.");
+  // do something here if necessary.
+}
+
 
 
 void onDanFiftyResponse(dword methodCallHandle, dword messageResponseHandle )
@@ -217,15 +227,22 @@ on sysvar_update SUB2::SetFaultCode
 
 on sysvar SUB2::DangerZone
 {
-if (gMcGetter> danGetter )
-  {
-    @sysvar::SUB2::DangerZone==1;
-  }
-  else
-  {
-   @sysvar::SUB2::DangerZone==0;
-  }
-  CheckForSomeIpError();
+   byte dataBuffer[1];
+  
+  dataBuffer[0] = 0;
+  
+  // set value of field content 
+  // No data in Getter!!
+
+  
+    SomeIpSetData(danZoneGetter,0,dataBuffer);
+    CheckForSomeIpError();
+
+    // call getter method
+    SomeIpCallMethod(danZoneGetter);
+    CheckForSomeIpError();
+  
+  
 }
 
 void OnDanFieldGetterResponse(DWORD danHandle,dword messageHandle){
@@ -245,7 +262,7 @@ void OnDanFieldGetterResponse(DWORD danHandle,dword messageHandle){
 
 
 /*
-* method to get tyre pressure danger limit
+* method to get danger limit
 */
 
 void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
@@ -341,7 +358,7 @@ void CheckForSomeIpError()
   
 }
 
-
+//G value print
 void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
 {
   DWORD res;        // value of return parameter
