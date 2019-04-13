@@ -352,7 +352,7 @@ void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
   res = SomeIpGetData(messageResponseHandle,elCount(data), data);
   CheckForSomeIpError();
 
-  writeEx(0,1,"\nDASH-SOME/IP: Get Danger Value called() method return value:  %d ",data[0]);
+  writeEx(0,1,"\nDASH-SOME/IP: Get Danger limit() method return value:  %d ",data[0]);
 
   @SUB2::DangerDsp = data[0];
 }
