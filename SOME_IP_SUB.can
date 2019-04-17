@@ -37,6 +37,8 @@ variables
   const int EG1 = 1;
   const int EG2 = 2;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
+  const DWORD DANGER_PRESSURE_EVENT = 0x8003;
+  const DWORD ZONE_EVENT = 0x8005;
   const DWORD FieldNotificationID = 0x8030;
   const DWORD FieldGetterID = 31;
   const DWORD FieldSetterID = 32;
@@ -245,6 +247,15 @@ on sysvar SUB2::DangerZone
   
 }
 
+/*
+on sysvar sysvar::SUB2::TyrePressure
+{
+   SomeIpTriggerEvent(pev);
+   CheckForSomeIpError();
+
+}
+*/
+
 void OnDanFieldGetterResponse(DWORD danHandle,dword messageHandle){
     
     DWORD res;      // value of return parameter
@@ -336,7 +347,9 @@ on key '5'
 on key 'g'
 {
     SomeIpCallMethod(DangerMc);
+  
     CheckForSomeIpError();
+  
 }
 
 /**********************************************************************

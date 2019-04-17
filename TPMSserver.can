@@ -56,7 +56,8 @@ variables
   DWORD dan;       // Event handle for tyre danger zone
   DWORD gPfld_A;  // provided Field handle
   DWORD reset_b;   // Field Handle for Reset Error
-  DWORD dan_zone_limit; // field for zone 
+  DWORD dan_zone_limit; // Event handle for zone 
+  DWORD dan_zone_limit_a; // field for zone 
   DWORD danlimit_low;   // Field Handle for Reset Error
   DWORD danlimit_high;
   DWORD dan_c;    // field handle for danger
@@ -203,22 +204,28 @@ void StartServer()
   pev = SomeIpAddEvent(psi, TYRE_PRESSURE_EVENT, "OnPrepareEvent1");
   CheckForSomeIpError();
   
+  
   //danger 
    dan = SomeIpAddEvent(psi, DANGER_PRESSURE_EVENT, "OnPrepareEvent2");
   CheckForSomeIpError();
   
+  
+    
+  //Event group for zone limit
+  peg3 = SomeIpAddProvidedEventGroup(psi,EG3 );
+  CheckForSomeIpError();
     
   //danger zone
-   dan_zone_limit = SomeIpAddEvent(psi, ZONE_EVENT, "OnPrepareEvent3");
+  dan_zone_limit = SomeIpAddEvent(psi, ZONE_EVENT, "OnPrepareEvent3");
   CheckForSomeIpError();
   
-   SomeIpAddEventToEventgroup(peg, dan);
+  SomeIpAddEventToEventgroup(peg, dan);
   CheckForSomeIpError();
 
   SomeIpAddEventToEventgroup(peg, pev);
   CheckForSomeIpError();
   
-  SomeIpAddEventToEventgroup(peg3, dan_zone_limit);
+  SomeIpAddEventToEventgroup(peg, dan_zone_limit);
   CheckForSomeIpError();
  
 
@@ -226,10 +233,7 @@ void StartServer()
   
   peg2 = SomeIpAddProvidedEventGroup(psi,EG2 );
   CheckForSomeIpError();
-  
-  //Event group for zone limit
-    peg3 = SomeIpAddProvidedEventGroup(psi,EG3 );
-  CheckForSomeIpError();
+
   // create field and add field to Eventgroup
   
   gPfld_A = SomeIpAddField(psi, FieldNotificationID, FieldGetterID, FieldSetterID);
@@ -266,13 +270,13 @@ void StartServer()
   
   
     //DAN ZONE LIMIT
-  dan_zone_limit = SomeIpAddField(psi, DanZoneNotificationID, danZoneGetterID, ResetSetterID);
+  dan_zone_limit_a = SomeIpAddField(psi, DanZoneNotificationID, danZoneGetterID, ResetSetterID);
   CheckForSomeIpError();
-  SomeIpAddFieldToEventgroup(peg3,dan_zone_limit);
-  CheckForSomeIpError();
+  
+ 
   // Initialise the field to the default pressure units, according to variable TPMS::Units
   
-  dataBuffer[0] =  @TPMS::Units;;
+  dataBuffer[0] = @TPMS::Units;;
   dataBuffer[0] = @TPMS::FaultType;
   dataBuffer[0] = @TPMS::DangerZone;
 
@@ -554,6 +558,15 @@ on sysvar sysvar::TPMS::TyrePressure
 {
    SomeIpTriggerEvent(pev);
    CheckForSomeIpError();
+  if(@TPMS::TyrePressure>@TPMS::DangerLimit )
+  {
+   writeEx(0,1,"ajahsfhaf" );
+   SomeIpTriggerEvent(dan_zone_limit);
+   CheckForSomeIpError();
+  }
+  else{
+    CheckForSomeIpError();
+  }
 
 }
 
@@ -592,7 +605,19 @@ on sysvar sysvar::TPMS::DangerLimit
 {
    SomeIpTriggerEvent(dan);
    CheckForSomeIpError();
+     // set value of field data 
+  if(@TPMS::TyrePressure>@TPMS::DangerLimit )
+  {
+  // writeEx(0,1,"ajahsfhaf" );
+   SomeIpTriggerEvent(dan_zone_limit);
+   CheckForSomeIpError();
+  }else
 
+  // commit field content, causing a SOME/IP notification to be sent
+  
+ // SomeIpCommitField(gPfld_A);
+  CheckForSomeIpError();
+  
 }
 
 void OnPrepareEvent2(DWORD eventHandle, DWORD messageHandle)
@@ -611,25 +636,23 @@ void OnPrepareEvent2(DWORD eventHandle, DWORD messageHandle)
 
 }
 
-on sysvar sysvar::TPMS::DangerZone
+
+void OnPrepareEvent3(DWORD eventHandle, DWORD messageHandle)
 {
+  byte dataBuffer[1];
   
-  Byte dataBuffer[1];
-  
-  dataBuffer[0] = @TPMS::DangerZone;
+  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger limt pressure event." );
 
-   // set value of field data 
-  if(@TPMS::TyrePressure>@TPMS::DangerZone )
-  {
-  SomeIpSetData(dan_zone_limit,1,dataBuffer);
-  CheckForSomeIpError();
-  }else
-
-  // commit field content, causing a SOME/IP notification to be sent
   
- // SomeIpCommitField(gPfld_A);
+  // Insert danger limit value in the event message.
+  
+  dataBuffer[0]=@TPMS::DangerZone;
+    
+  SomeIpSetData(messageHandle,1,dataBuffer);
   CheckForSomeIpError();
+
 }
+
 
 
 
