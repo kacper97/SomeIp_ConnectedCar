@@ -9,14 +9,11 @@ variables
   DWORD gMc;                // global method call handle
   DWORD gMcGetter;          // getter method call
   DWORD gMcSetter;          // setter method call
-  DWORD danZoneGetter;             //Global method call handle for danger zone
- const DWORD danZoneGetterID =45;
-  
+  DWORD dan_zone_limit; 
   DWORD resetFaultCode;
   DWORD resetFaultCodeSetter;
   DWORD setDangerLimitlow;
   DWORD setDangerLimithigh;
-  dword danGetter;
   DWORD DangerMc;  // global to get g val
 
   DWORD aep = 0;            // application endpoint handle
@@ -36,6 +33,7 @@ variables
   const int SERVICE_ID = 0x305f;
   const int EG1 = 1;
   const int EG2 = 2;
+  const int EG3 = 3;
   const DWORD TYRE_PRESSURE_EVENT = 0x8001;
   const DWORD DANGER_PRESSURE_EVENT = 0x8003;
   const DWORD ZONE_EVENT = 0x8005;
@@ -79,16 +77,19 @@ On start
    // create Event Consumer for danger limit
   dan = SomeIpCreateEventConsumer(csi,0x8003,"CallbackEvent2");
   CheckForSomeIpError();
+    
+  dan_zone_limit = SomeIpCreateEventConsumer(csi,0x8005,"OnZoneResponse");
+  //CheckForSomeIpError();
+  
+  
+    // create Event Consumer
+
   gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
-  CheckForSomeIpError();
-  danZoneGetter = SomeIpCreateMethodCall(csi,danZoneGetterID,"OnZoneGetterResponse");
   CheckForSomeIpError();
   
   gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
   CheckForSomeIpError();
-  // Gets the current Value of danger limit
-  danGetter = SomeIpCreateMethodCall(csi,DanGetterID,"OnDanFieldGetterResponse");
-  CheckForSomeIpError();
+
   //RESET
   resetFaultCodeSetter = SomeIpCreateMethodCall(csi,ResetSetterID,"onFaultResetResponse");
   CheckForSomeIpError();
@@ -96,7 +97,7 @@ On start
   setDangerLimitlow = SomeIpCreateMethodCall(csi,setDangerLimitlowID,"onDanFortyResponse");
   CheckForSomeIpError();
   //50
-    setDangerLimithigh = SomeIpCreateMethodCall(csi,setDangerLimithighID,"onDanFiftyResponse");
+  setDangerLimithigh = SomeIpCreateMethodCall(csi,setDangerLimithighID,"onDanFiftyResponse");
   CheckForSomeIpError();
   
   // G prress
@@ -110,16 +111,18 @@ On start
   
   
   
+  
+  
   // Subscribe to Eventgroup #1 for the event
   
   ceg = SomeIpAddConsumedEventGroup(csi,1);
-  CheckForSomeIpError();
    
+  CheckForSomeIpError();
 
   // create Event Consumer
   cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
   CheckForSomeIpError();
-  
+
 
   // Enable multicast sending of events when 2 or more subscribers.
   
@@ -156,23 +159,24 @@ void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
    
 }
 
-void OnResetNotification(DWORD pfHandle,DWORD messageHandle)
+
+
+void OnZoneResponse(DWORD eventHandle, DWORD messageHandle)
 {
  
-
-    DWORD res; // value of return parameter
-    char data[1];
+  DWORD res;        // value of return parameter
+  char data[1];
   
 
-    // get the returned parameter values
-    res = SomeIpGetData(messageHandle,elCount(data), data);
-    CheckForSomeIpError();
-  
-    writeEx(0,1,"\nSUB2-SOME/IP: Reset field notification data received: %d ",data[0]);
+  // get the returned parameter values
+  res = SomeIpGetData(messageHandle,elCount(data), data);
+  CheckForSomeIpError();
 
-    //@SUB2::Fault = data[0];
+  writeEx(0,1,"\nDASH-SOME/IP: Dan zone() method return value:  %d ",data[0]);
 
+  @SUB2::DangerZone= data[0];
 }
+
 
 void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
 {
@@ -183,12 +187,6 @@ void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
 void onDanFortyResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nSUB2-SOME/IP: dan 40 Code() method response received.");
-  // do something here if necessary.
-}
-
-void OnZoneGetterResponse(dword methodCallHandle, dword messageResponseHandle )
-{
-    writeEx(0,1,"\nSUB2-SOME/IP: dan zone Code() method response received.");
   // do something here if necessary.
 }
 
@@ -224,51 +222,6 @@ on sysvar_update SUB2::SetFaultCode
       SomeIpCallMethod(resetFaultCodeSetter);
       CheckForSomeIpError();
   }
-}
-
-
-on sysvar SUB2::DangerZone
-{
-   byte dataBuffer[1];
-  
-  dataBuffer[0] = 0;
-  
-  // set value of field content 
-  // No data in Getter!!
-
-  
-    SomeIpSetData(danZoneGetter,0,dataBuffer);
-    CheckForSomeIpError();
-
-    // call getter method
-    SomeIpCallMethod(danZoneGetter);
-    CheckForSomeIpError();
-  
-  
-}
-
-/*
-on sysvar sysvar::SUB2::TyrePressure
-{
-   SomeIpTriggerEvent(pev);
-   CheckForSomeIpError();
-
-}
-*/
-
-void OnDanFieldGetterResponse(DWORD danHandle,dword messageHandle){
-    
-    DWORD res;      // value of return parameter
-    char data[1];
-  
-
-    // get the returned parameter values
-    res = SomeIpGetData(messageHandle,elCount(data), data);
-    CheckForSomeIpError();
-
-    writeEx(0,1,"\nSUB2-SOME/IP: DangerPressure event data received: %d ",data[0]);
-
-
 }
 
 
