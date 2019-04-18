@@ -53,11 +53,11 @@ variables
   DWORD peg2;     // provided Eventgroup 2 handle
   DWORD pev;      // provided Event handle
   DWORD dan;       // Event handle for tyre danger zone
-  DWORD gPfld_A;  // provided Field handle
+  DWORD gPfld_A;   // provided Field handle Pressure
   DWORD reset_b;   // Field Handle for Reset Error
-  DWORD dan_zone_limit; // Event handle for zone 
-  DWORD danlimit_low;   // Field Handle for Reset Error
-  DWORD danlimit_high;
+  DWORD dan_zone_limit; // Event handle for danger zone 
+  DWORD danlimit_low;   // Field Handle for setting limit to 40
+  DWORD danlimit_high;  // field handle for setting limit to 50
   DWORD dan_c;    // field handle for danger
   
   const int SERVICE_ID = 0x305f;

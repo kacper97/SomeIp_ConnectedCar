@@ -3,17 +3,17 @@
   <Object Type="Vector.CANalyzer.Panels.Runtime.Panel, Vector.CANalyzer.Panels.Common, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="Panel" Children="Controls" ControlName="TPM">
     <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl2" Children="Controls" ControlName="Static Text">
       <Property Name="Name">StaticTextControl2</Property>
-      <Property Name="Size">173, 24</Property>
-      <Property Name="Location">390, 342</Property>
+      <Property Name="Size">214, 24</Property>
+      <Property Name="Location">365, 329</Property>
       <Property Name="Font">Microsoft Sans Serif, 14.25pt, style=Bold</Property>
-      <Property Name="Text">----------O)-----------</Property>
+      <Property Name="Text">-------------O)--------------</Property>
     </Object>
     <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl13" Children="Controls" ControlName="Group Box 2">
       <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl14" Children="Controls" ControlName="Group Box 9">
         <Object Type="Vector.CANalyzer.Panels.Design.TextBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="TextBoxControl5" Children="Controls" ControlName="clntDangerbox">
           <Property Name="Name">TextBoxControl5</Property>
-          <Property Name="Size">165, 22</Property>
-          <Property Name="Location">62, 63</Property>
+          <Property Name="Size">154, 22</Property>
+          <Property Name="Location">71, 63</Property>
           <Property Name="AlarmUpperTextColor">WindowText</Property>
           <Property Name="ValueDecimalPlaces">0</Property>
           <Property Name="AlarmLowerBkgColor">Salmon</Property>
@@ -22,16 +22,16 @@
           <Property Name="AlarmLowerTextColor">WindowText</Property>
           <Property Name="AlarmGeneralSettings">1;0;1;1</Property>
           <Property Name="DisplayLabel">Left</Property>
-          <Property Name="DescriptionText">Danger Limit is</Property>
-          <Property Name="DescriptionSize">70, 18</Property>
+          <Property Name="DescriptionText">Danger Limit </Property>
+          <Property Name="DescriptionSize">61, 18</Property>
           <Property Name="UsedValueTable">PhysicalValue</Property>
           <Property Name="SymbolConfiguration">5;16;SUB2;;;DangerDsp;1;;;-1;;;</Property>
-          <Property Name="TabIndex">4</Property>
+          <Property Name="TabIndex">3</Property>
         </Object>
         <Object Type="Vector.CANalyzer.Panels.Design.TextBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="TextBoxControl6" Children="Controls" ControlName="clntPressure">
           <Property Name="Name">TextBoxControl6</Property>
-          <Property Name="Size">183, 22</Property>
-          <Property Name="Location">42, 40</Property>
+          <Property Name="Size">173, 22</Property>
+          <Property Name="Location">52, 40</Property>
           <Property Name="AlarmUpperTextColor">WindowText</Property>
           <Property Name="ValueDecimalPlaces">0</Property>
           <Property Name="AlarmLowerBkgColor">Salmon</Property>
@@ -40,16 +40,16 @@
           <Property Name="AlarmLowerTextColor">WindowText</Property>
           <Property Name="AlarmGeneralSettings">1;0;1;1</Property>
           <Property Name="DisplayLabel">Left</Property>
-          <Property Name="DescriptionText">Current Pressure is</Property>
-          <Property Name="DescriptionSize">90, 18</Property>
+          <Property Name="DescriptionText">Current Pressure </Property>
+          <Property Name="DescriptionSize">80, 18</Property>
           <Property Name="UsedValueTable">PhysicalValue</Property>
           <Property Name="SymbolConfiguration">5;16;SUB2;;;PressureDsp;1;;;-1;;;</Property>
           <Property Name="TabIndex">3</Property>
         </Object>
         <Object Type="Vector.CANalyzer.Panels.Design.TextBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="TextBoxControl7" Children="Controls" ControlName="clntFault">
           <Property Name="Name">TextBoxControl7</Property>
-          <Property Name="Size">218, 22</Property>
-          <Property Name="Location">7, 17</Property>
+          <Property Name="Size">162, 22</Property>
+          <Property Name="Location">63, 17</Property>
           <Property Name="AlarmUpperTextColor">WindowText</Property>
           <Property Name="ValueDecimalPlaces">0</Property>
           <Property Name="AlarmLowerBkgColor">Salmon</Property>
@@ -58,8 +58,8 @@
           <Property Name="AlarmLowerTextColor">WindowText</Property>
           <Property Name="AlarmGeneralSettings">1;0;1;1</Property>
           <Property Name="DisplayLabel">Left</Property>
-          <Property Name="DescriptionText">Pressure in Danger Zone is</Property>
-          <Property Name="DescriptionSize">125, 18</Property>
+          <Property Name="DescriptionText">Danger Zone ?</Property>
+          <Property Name="DescriptionSize">70, 18</Property>
           <Property Name="UsedValueTable">PhysicalValue</Property>
           <Property Name="SymbolConfiguration">5;16;SUB2;;;DangerZone;1;;;-1;;;</Property>
           <Property Name="TabIndex">2</Property>
@@ -91,13 +91,13 @@
         <Object Type="Vector.CANalyzer.Panels.Design.ButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="ButtonControl5" Children="Controls" ControlName="cltResetFault">
           <Property Name="Name">ButtonControl5</Property>
           <Property Name="Size">75, 23</Property>
-          <Property Name="Location">99, 23</Property>
+          <Property Name="Location">84, 24</Property>
           <Property Name="ReleaseValueVT">1;Lower;1</Property>
           <Property Name="ReleaseValue">1</Property>
           <Property Name="PressValueVT">1;Lower;0</Property>
           <Property Name="PressValue">0</Property>
           <Property Name="Text">Reset Fault</Property>
-          <Property Name="SymbolConfiguration">5;16;SUB2;;;SetFaultCode;1;;;-1;;;</Property>
+          <Property Name="SymbolConfiguration">5;16;SUB2;;;ResetFaultCode;1;;;-1;;;</Property>
           <Property Name="TabIndex">1</Property>
         </Object>
         <Property Name="Name">GroupBoxControl16</Property>
@@ -124,7 +124,7 @@
         <Property Name="TabIndex">2</Property>
       </Object>
       <Property Name="Name">GroupBoxControl13</Property>
-      <Property Name="Size">274, 410</Property>
+      <Property Name="Size">260, 375</Property>
       <Property Name="Location">640, 2</Property>
       <Property Name="BackColor">Beige</Property>
       <Property Name="Text">Kacpers Diagnostic</Property>
@@ -268,8 +268,8 @@
     <Object Type="Vector.CANalyzer.Panels.Design.GroupBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="GroupBoxControl1" Children="Controls" ControlName="Group Box">
       <Object Type="Vector.CANalyzer.Panels.Design.TextBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="TextBoxControl2" Children="Controls" ControlName="clntFault">
         <Property Name="Name">TextBoxControl2</Property>
-        <Property Name="Size">218, 22</Property>
-        <Property Name="Location">15, 356</Property>
+        <Property Name="Size">216, 22</Property>
+        <Property Name="Location">15, 369</Property>
         <Property Name="AlarmUpperTextColor">WindowText</Property>
         <Property Name="ValueDecimalPlaces">0</Property>
         <Property Name="AlarmLowerBkgColor">Salmon</Property>
@@ -278,8 +278,8 @@
         <Property Name="AlarmLowerTextColor">WindowText</Property>
         <Property Name="AlarmGeneralSettings">1;0;1;1</Property>
         <Property Name="DisplayLabel">Left</Property>
-        <Property Name="DescriptionText">Pressure in Danger Zone is</Property>
-        <Property Name="DescriptionSize">125, 18</Property>
+        <Property Name="DescriptionText">Danger Zone ?</Property>
+        <Property Name="DescriptionSize">70, 18</Property>
         <Property Name="UsedValueTable">PhysicalValue</Property>
         <Property Name="SymbolConfiguration">5;16;TPMS;;;DangerZone;1;;;-1;;;</Property>
         <Property Name="TabIndex">11</Property>
@@ -401,7 +401,7 @@
         <Property Name="TabIndex">9</Property>
       </Object>
       <Property Name="Name">GroupBoxControl1</Property>
-      <Property Name="Size">257, 375</Property>
+      <Property Name="Size">250, 410</Property>
       <Property Name="Location">31, 2</Property>
       <Property Name="BackColor">Beige</Property>
       <Property Name="Text">TPM Server</Property>
@@ -410,7 +410,7 @@
     <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=11.0.81.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl1" Children="Controls" ControlName="Static Text">
       <Property Name="Name">StaticTextControl1</Property>
       <Property Name="Size">76, 24</Property>
-      <Property Name="Location">285, 144</Property>
+      <Property Name="Location">275, 161</Property>
       <Property Name="Font">Microsoft Sans Serif, 14.25pt, style=Bold</Property>
       <Property Name="Text">---O)---</Property>
     </Object>

@@ -6,54 +6,36 @@ includes
 
 variables
 {
-  DWORD gMc;                // global method call handle
   DWORD gMcGetter;          // getter method call
-  DWORD gMcSetter;          // setter method call
-  DWORD dan_zone_limit; 
-  DWORD resetFaultCode;
-  DWORD resetFaultCodeSetter;
-  DWORD setDangerLimitlow;
-  DWORD setDangerLimithigh;
-  DWORD DangerMc;  // global to get g val
-
+  DWORD dan_zone_limit;     // event call to get limit val
+  DWORD resetFaultCodeSetter;   //method call to reset the fault
+  DWORD setDangerLimitLow;      // method call to set 40 danger limit
+  DWORD setDangerLimitHigh;     // method call to set 50 danger limit
+  DWORD Current_dan_val_method;  // global to get g val
   DWORD aep = 0;            // application endpoint handle
   DWORD messageHandle = 0;  // handle of the created SOME/IP message
   BYTE payload[1];          // the message payload
-   
   DWORD csi;                // consumed Service Instance handle
-  
   DWORD ceg;                // consumed Eventgroup handle for tyre pressure event
-  DWORD ceg2;               // consumed Eventgroup handle for field notification
-
   DWORD pre;                //Pressure danger zone
   DWORD cev;                // consumed Event handle
-  DWORD dan;                // danger
+  DWORD dan_limit;          // danger limit 
+  const int SERVICE_ID = 0x305f;  // Service id 
+  const int EG1 = 1;              // Event Group
+  const DWORD TYRE_PRESSURE_EVENT = 0x8001;  //Tyre pressure Id
+  const DWORD DANGER_PRESSURE_EVENT = 0x8003;  // Danger limit id
+  const DWORD ZONE_EVENT = 0x8005;        // Danger zone event
+  const DWORD FieldGetterID = 31;         // Get Pressure id
+  const DWORD ResetSetterID = 33;         // Reset Id
+  const DWORD setDangerLimitlowID = 37; // 40 danger limit id
+  const DWORD setDangerLimithighID = 40; // 50 danger limit id
 
-  
-  const int SERVICE_ID = 0x305f;
-  const int EG1 = 1;
-  const int EG2 = 2;
-  const int EG3 = 3;
-  const DWORD TYRE_PRESSURE_EVENT = 0x8001;
-  const DWORD DANGER_PRESSURE_EVENT = 0x8003;
-  const DWORD ZONE_EVENT = 0x8005;
-  const DWORD FieldNotificationID = 0x8030;
-  const DWORD FieldGetterID = 31;
-  const DWORD FieldSetterID = 32;
-  const DWORD ResetSetterID = 33;
-  const DWORD ResetGetterID = 34;
-  const DWORD DanGetterID =35;
-  const DWORD setDangerLimitlowID = 37;
-  const DWORD setDangerLimithighID = 40;
-
-  const int CLIENT_PORTNO = 30501;
+  const int CLIENT_PORTNO = 30501; //port number
 
 }
 
 On start
 {
-
-
   SomeIpSetVerbosity(3);  // Show information and warnings
   
   // initialize the payload.  No parameters are used in the GetFault() method though.
@@ -67,81 +49,62 @@ On start
   csi = SomeIpCreateConsumedServiceInstance(aep,0x305f,1);
   CheckForSomeIpError();
   
-      
-  //RESET
-  resetFaultCode = SomeIpCreateMethodCall(csi,39,"OnMethodResponse");
+  //Danger Limit Event
+  dan_limit = SomeIpCreateEventConsumer(csi,0x8003,"getDangerLimitMethod");
   CheckForSomeIpError();
-   //RESET
-  SomeIpSetData(resetFaultCode,elCount(payload),payload);
-  CheckForSomeIpError(); 
-   // create Event Consumer for danger limit
-  dan = SomeIpCreateEventConsumer(csi,0x8003,"CallbackEvent2");
-  CheckForSomeIpError();
-    
+  
+  //Danger Zone Event
   dan_zone_limit = SomeIpCreateEventConsumer(csi,0x8005,"OnZoneResponse");
- 
   CheckForSomeIpError();
   
   
-  // create Event Consumer
-
+  //Pressure Event
   gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
-  CheckForSomeIpError();
-  
-  gMcSetter = SomeIpCreateMethodCall(csi,FieldSetterID,"OnFieldSetterResponse");
   CheckForSomeIpError();
 
   //RESET
   resetFaultCodeSetter = SomeIpCreateMethodCall(csi,ResetSetterID,"onFaultResetResponse");
   CheckForSomeIpError();
+  
   //40
-  setDangerLimitlow = SomeIpCreateMethodCall(csi,setDangerLimitlowID,"onDanFortyResponse");
-  CheckForSomeIpError();
-  //50
-  setDangerLimithigh = SomeIpCreateMethodCall(csi,setDangerLimithighID,"onDanFiftyResponse");
+  setDangerLimitLow = SomeIpCreateMethodCall(csi,setDangerLimitlowID,"onDanFortyResponse");
   CheckForSomeIpError();
   
-  // G prress
-  DangerMc = SomeIpCreateMethodCall(csi,12,"OnDangerResponse");
+  //50
+  setDangerLimitHigh = SomeIpCreateMethodCall(csi,setDangerLimithighID,"onDanFiftyResponse");
+  CheckForSomeIpError();
+  
+  // G press
+  Current_dan_val_method = SomeIpCreateMethodCall(csi,12,"OnDangerResponse");
   CheckForSomeIpError();
   
   //Works also without any Fibex/ARXML but only with SomeIpSetData and not SomeIpSetValueDWord (online help)
-  
-  SomeIpSetData(DangerMc,elCount(payload),payload);
+  SomeIpSetData(Current_dan_val_method,elCount(payload),payload);
   CheckForSomeIpError();
   
   // Subscribe to Eventgroup #1 for the event
   
   ceg = SomeIpAddConsumedEventGroup(csi,1);
-   
   CheckForSomeIpError();
 
   // create Event Consumer
-  cev = SomeIpCreateEventConsumer(csi,0x8001,"CallbackEvent1");
+  cev = SomeIpCreateEventConsumer(csi,0x8001,"GetTyrePressureMethod");
   CheckForSomeIpError();
 
-
   // Enable multicast sending of events when 2 or more subscribers.
-  
   SomeIpSetProperty(csi, "MulticastThreshold", 2);
-
 }
 
 
   
 /**********************************************************************
-*
 * Event handler for the tyrePressure event.
 * Retrieves the current value and updates the panel display.
-*
 *********************************************************************/
-void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
+void GetTyrePressureMethod(DWORD cevHandle, DWORD messageHandle)
 {
- 
-  
     DWORD res;      // value of return parameter
     char data[1];
-  
 
     // get the returned parameter values
     res = SomeIpGetData(messageHandle,elCount(data), data);
@@ -150,53 +113,57 @@ void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
     writeEx(0,1,"\nSUB-SOME/IP: tyrePressure event data received: %d ",data[0]);
 
     @SUB2::PressureDsp = data[0];
-   
 }
 
-
-
+/**********************************************************************
+* Gets the current value of the Danger zone event from the server
+*********************************************************************/
 void OnZoneResponse(DWORD eventHandle, DWORD messageHandle)
 {
- 
   DWORD res;        // value of return parameter
   char data[1];
-  
 
   // get the returned parameter values
   res = SomeIpGetData(messageHandle,elCount(data), data);
   CheckForSomeIpError();
 
-  writeEx(0,1,"\nDASH-SOME/IP: Dan zone() method return value:  %d ",data[0]);
+  writeEx(0,1,"\nDASH-SOME/IP: Danger zone() method return value:  %d ",data[0]);
 
   @SUB2::DangerZone= data[0];
 }
 
 
+/**********************************************************************
+* Method that writes out the Fault response
+*********************************************************************/
 void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nSUB2-SOME/IP: Reset Fault Code() method response received.");
 }
 
+/**********************************************************************
+* Method to write out when 4 is pressed
+*********************************************************************/
+
 void onDanFortyResponse(dword methodCallHandle, dword messageResponseHandle )
 {
-    writeEx(0,1,"\nSUB2-SOME/IP: dan 40 Code() method response received.");
+    writeEx(0,1,"\nSUB2-SOME/IP: dan_limit 40 Code() method response received.");
 }
 
 
-
+/**********************************************************************
+* Method to write out when 5 is pressed
+*********************************************************************/
 void onDanFiftyResponse(dword methodCallHandle, dword messageResponseHandle )
 {
-    writeEx(0,1,"\nSUB2-SOME/IP: dan 50 Code() method response received.");
+    writeEx(0,1,"\nSUB2-SOME/IP: dan_limit 50 Code() method response received.");
 }
 
 /**********************************************************************
-*
-* Event handler for the reset 
-
+* Event Handler to handle whent the reset button is pressed
 *********************************************************************/
-on sysvar_update SUB2::SetFaultCode
+on sysvar_update SUB2::ResetFaultCode
 {
-
   byte dataBuffer[1];
   if (@this == 1)     // prevent double-triggering with panel button controls
   {
@@ -211,14 +178,12 @@ on sysvar_update SUB2::SetFaultCode
   }
 }
 
-/*
-* method to get danger limit
-*/
 
-void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
+/**********************************************************************
+* Method to get the current Danger Limit Value
+*********************************************************************/
+void getDangerLimitMethod(DWORD danHandle, DWORD messageHandle)
 {
- 
-  
     DWORD res;      // value of return parameter
     char data[1];
 
@@ -231,6 +196,9 @@ void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
     @SUB2::DangerDsp = data[0];
 }
 
+/**********************************************************************
+* When the r key is pressed the resetFaultCodeSetter Method is run
+*********************************************************************/
 on key 'r'
 {
  byte dataBuffer[1];
@@ -246,8 +214,9 @@ on key 'r'
       CheckForSomeIpError();
   }
 } 
-    
-
+/**********************************************************************
+* When the key 4 is pressed the setDangerLimitLow method is run
+*********************************************************************/    
 on key '4'
 {
   byte dataBuffer[1];
@@ -255,38 +224,45 @@ on key '4'
   
   {
       // set value of field content 
-      SomeIpSetData(setDangerLimitlow,1,dataBuffer);
+      SomeIpSetData(setDangerLimitLow,1,dataBuffer);
       CheckForSomeIpError();
 
       // call setter method
-      SomeIpCallMethod(setDangerLimitlow);
+      SomeIpCallMethod(setDangerLimitLow);
       CheckForSomeIpError();
   }
 }
 
+/**********************************************************************
+* When the key 5 is pressed the setDangerLimitHigh method is run
+*********************************************************************/    
 on key '5'
 {
   byte dataBuffer[1];
       dataBuffer[0]=0;
-  
   {
       // set value of field content 
-      SomeIpSetData(setDangerLimithigh,1,dataBuffer);
+      SomeIpSetData(setDangerLimitHigh,1,dataBuffer);
       CheckForSomeIpError();
 
       // call setter method
-      SomeIpCallMethod(setDangerLimithigh);
+      SomeIpCallMethod(setDangerLimitHigh);
       CheckForSomeIpError();
   }
 }
-
+/**********************************************************************
+* when G is pressed, Current_dan_val_method is triggered.
+*********************************************************************/   
 on key 'g'
 {
-    SomeIpCallMethod(DangerMc);
+    SomeIpCallMethod(Current_dan_val_method);
     CheckForSomeIpError();
 }
 
-//G value print
+/**********************************************************************
+* Function to handle when the g button is pressed, it writes out the danger value in the
+* write window
+*********************************************************************/
 void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
 {
   DWORD res;        // value of return parameter
@@ -303,16 +279,13 @@ void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
 }
 
 /**********************************************************************
-*
 * Generic function to catch any SOME/IP errors and log them to the
 * Write window.
-*
 *********************************************************************/
   
 void CheckForSomeIpError()
 {
   char buffer[1024];
-  
   // check if last function was executed correct
   if((SomeIpGetLastErrorText(elcount(buffer),buffer)) != 0)
   {
