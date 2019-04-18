@@ -79,10 +79,11 @@ On start
   CheckForSomeIpError();
     
   dan_zone_limit = SomeIpCreateEventConsumer(csi,0x8005,"OnZoneResponse");
-  //CheckForSomeIpError();
+ 
+  CheckForSomeIpError();
   
   
-    // create Event Consumer
+  // create Event Consumer
 
   gMcGetter = SomeIpCreateMethodCall(csi,FieldGetterID,"OnFieldGetterResponse");
   CheckForSomeIpError();
@@ -109,10 +110,6 @@ On start
   SomeIpSetData(DangerMc,elCount(payload),payload);
   CheckForSomeIpError();
   
-  
-  
-  
-  
   // Subscribe to Eventgroup #1 for the event
   
   ceg = SomeIpAddConsumedEventGroup(csi,1);
@@ -138,9 +135,6 @@ On start
 * Retrieves the current value and updates the panel display.
 *
 *********************************************************************/
-
- 
-
 void CallbackEvent1(DWORD cevHandle, DWORD messageHandle)
 {
  
@@ -181,13 +175,11 @@ void OnZoneResponse(DWORD eventHandle, DWORD messageHandle)
 void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nSUB2-SOME/IP: Reset Fault Code() method response received.");
-  // do something here if necessary.
 }
 
 void onDanFortyResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nSUB2-SOME/IP: dan 40 Code() method response received.");
-  // do something here if necessary.
 }
 
 
@@ -195,7 +187,6 @@ void onDanFortyResponse(dword methodCallHandle, dword messageResponseHandle )
 void onDanFiftyResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nSUB2-SOME/IP: dan 50 Code() method response received.");
-  // do something here if necessary.
 }
 
 /**********************************************************************
@@ -203,14 +194,10 @@ void onDanFiftyResponse(dword methodCallHandle, dword messageResponseHandle )
 * Event handler for the reset 
 
 *********************************************************************/
-
-
 on sysvar_update SUB2::SetFaultCode
 {
 
   byte dataBuffer[1];
-   //SomeIpSDSubscribeEventGroup( dan, 1 );
-  
   if (@this == 1)     // prevent double-triggering with panel button controls
   {
       dataBuffer[0]=0;
@@ -224,7 +211,6 @@ on sysvar_update SUB2::SetFaultCode
   }
 }
 
-
 /*
 * method to get danger limit
 */
@@ -235,7 +221,6 @@ void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
   
     DWORD res;      // value of return parameter
     char data[1];
-  
 
     // get the returned parameter values
     res = SomeIpGetData(messageHandle,elCount(data), data);
@@ -244,8 +229,6 @@ void CallbackEvent2(DWORD danHandle, DWORD messageHandle)
     writeEx(0,1,"\nSUB2-SOME/IP: DangerPressure event data received: %d ",data[0]);
 
     @SUB2::DangerDsp = data[0];
-  
- 
 }
 
 on key 'r'
@@ -300,9 +283,23 @@ on key '5'
 on key 'g'
 {
     SomeIpCallMethod(DangerMc);
-  
     CheckForSomeIpError();
+}
+
+//G value print
+void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
+{
+  DWORD res;        // value of return parameter
+  char data[1];
   
+
+  // get the returned parameter values
+  res = SomeIpGetData(messageResponseHandle,elCount(data), data);
+  CheckForSomeIpError();
+
+  writeEx(0,1,"\nDASH-SOME/IP: Get Danger limit() method return value:  %d ",data[0]);
+
+  @SUB2::DangerDsp = data[0];
 }
 
 /**********************************************************************
@@ -323,20 +320,3 @@ void CheckForSomeIpError()
   } 
   
 }
-
-//G value print
-void OnDangerResponse(dword methodCallHandle, dword messageResponseHandle )
-{
-  DWORD res;        // value of return parameter
-  char data[1];
-  
-
-  // get the returned parameter values
-  res = SomeIpGetData(messageResponseHandle,elCount(data), data);
-  CheckForSomeIpError();
-
-  writeEx(0,1,"\nDASH-SOME/IP: Get Danger limit() method return value:  %d ",data[0]);
-
-  @SUB2::DangerDsp = data[0];
-}
-
