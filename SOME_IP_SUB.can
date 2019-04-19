@@ -144,12 +144,10 @@ void onFaultResetResponse(dword methodCallHandle, dword messageResponseHandle )
 /**********************************************************************
 * Method to write out when 4 is pressed
 *********************************************************************/
-
 void onDanFortyResponse(dword methodCallHandle, dword messageResponseHandle )
 {
     writeEx(0,1,"\nSUB2-SOME/IP: dan_limit 40 Code() method response received.");
 }
-
 
 /**********************************************************************
 * Method to write out when 5 is pressed

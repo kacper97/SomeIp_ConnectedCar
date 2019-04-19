@@ -67,10 +67,6 @@ variables
   const DWORD DANGER_PRESSURE_EVENT = 0x8003;   // danger pressure event has id 0x8003
   const DWORD ZONE_EVENT = 0x8005;      // zone event has id 0x8005 
   const DWORD FieldNotificationID = 0x8030;   // field notification has id 0x8030
-  const DWORD ResetNotificationID = 0x8033;     // reset notification has an id of 0x8033
-  const DWORD DanNotificationID = 0x8034;     // danger notification has id 0x8034
-  const DWORD DanNotificationLowID = 0x8035;  // low i.e. 40 danger notification has id 0x8035
-  const dword DanNotificationHighID = 0x8040;  // high i.e. 50 danger notification has id 0x8040
   const DWORD FieldGetterID = 31;  // pressure field id
   const DWORD FieldSetterID = 32;   // pressure field id
   const DWORD ResetSetterID = 33;   // reset setter  id
@@ -97,22 +93,6 @@ void OnSomeIpMethodRequest( dword methodHandle, dword messageHandle, dword messa
   SomeIpSetData (messageResponseHandle,1,dataBuffer);
   CheckForSomeIpError();
 }
-
-
-/***********************************************************************
-* Danger Slider, returns the value from the slider
-*********************************************************************/
-void onDangerZoneRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
-{
-  byte dataBuffer[1];
-  dataBuffer[0] = @TPMS::DangerLimit;
-  
-  // Return the selected fault type from the TPMS panel.
-  
-  SomeIpSetData (messageResponseHandle,1,dataBuffer);
-  CheckForSomeIpError();
-}
-
 
 /**********************************************************************
 *  Startup routine.
@@ -165,8 +145,8 @@ void StartServer()
   //Tyre pressure 
   SomeIpAddMethod(psi,7,"OnSomeIpMethodRequest");
   CheckForSomeIpError();
-  // create Eventgroup and add the tyrePressure event to it.
   
+  // create Eventgroup and add the tyrePressure event to it.
   peg = SomeIpAddProvidedEventGroup(psi,EG1);
   CheckForSomeIpError();
 
@@ -204,32 +184,8 @@ void StartServer()
   SomeIpAddFieldToEventgroup(peg2,gPfld_A);
   CheckForSomeIpError();
   
-  //RESET
-  reset_b = SomeIpAddField(psi, ResetNotificationID, ResetGetterId, ResetSetterID);
-  CheckForSomeIpError();
-  SomeIpAddFieldToEventgroup(peg2,reset_b);
-  CheckForSomeIpError();
-  
-  //40
-  danlimit_low = SomeIpAddField(psi, DanNotificationLowID, getDangerLimitLowID, setDangerLimitlowID);
-  CheckForSomeIpError();
-  SomeIpAddFieldToEventgroup(peg2,danlimit_low);
-  CheckForSomeIpError();
-  
-  //50
-  danlimit_high= SomeIpAddField(psi, DanNotificationHighID, getDangerLimitHighID, setDangerLimitHighID);
-  CheckForSomeIpError();
-  SomeIpAddFieldToEventgroup(peg2,danlimit_high);
-  CheckForSomeIpError();
-  
   //G
   SomeIpAddMethod(psi,12,"onDangerZoneRequest");
-  CheckForSomeIpError();
-  
-  //danger_limit
-  dan_limit_field = SomeIpAddField(psi, DanNotificationID, DanGetterId, DanSetterId);
-  CheckForSomeIpError();
-  SomeIpAddFieldToEventgroup(peg2,reset_b);
   CheckForSomeIpError();
 
   // Initialise the fields to the default pressure units,Fault Type, And Danger Zone according to variable TPMS::Units
@@ -479,6 +435,19 @@ on sysvar sysvar::TPMS::DangerLimit
   }
 }
 
+/***********************************************************************
+* Danger Slider, returns the value from the slider for the G button
+*********************************************************************/
+void onDangerZoneRequest( dword methodHandle, dword messageHandle, dword messageResponseHandle )
+{
+  byte dataBuffer[1];
+  dataBuffer[0] = @TPMS::DangerLimit;
+  
+  // Return the selected fault type from the TPMS panel.
+  SomeIpSetData (messageResponseHandle,1,dataBuffer);
+  CheckForSomeIpError();
+}
+
 /**********************************************************************
 * Function that sends the current danger limit value to the Sub2.
 *********************************************************************/
@@ -486,7 +455,7 @@ void Send_Dan_Limit(DWORD eventHandle, DWORD messageHandle)
 {
   byte dataBuffer[1];
   
-  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger tyre pressure event." );
+  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger limi event." );
   
   // Insert danger limit value in the event message.
   
@@ -502,7 +471,7 @@ void Send_dan_zone_limit(DWORD eventHandle, DWORD messageHandle)
 {
   byte dataBuffer[1];
   
-  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger limit value event." );
+  writeEx(0,1,"\nTPMS-SOME/IP: Preparing to send danger zone value event." );
   
   // Insert danger limit value in the event message.
   dataBuffer[0]=@TPMS::DangerZone;
